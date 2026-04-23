@@ -678,14 +678,21 @@
           <label>URL del Google Sheet publicado</label>
           <input type="text" id="imp-url" placeholder="https://docs.google.com/spreadsheets/d/XXXXXXXX/edit" style="font-size:11px;">
         </div>
-        <div class="import-url-hint">
-          <strong>¿Cómo publicar el Sheet?</strong><br>
-          1. Abrí el Sheet → <strong>Archivo → Compartir → Publicar en la web</strong><br>
-          2. Asegurate de que también esté compartido como <strong>"Cualquiera con el enlace puede ver"</strong><br>
-          3. Pegá la URL del Sheet acá arriba (la URL normal de edición funciona)
+        <div style="margin-bottom:12px;">
+          <a href="https://docs.google.com/spreadsheets/d/1j8H7gNeKT6_NVJ-iQ7PxKEUmaAmHyFiB24n6ig2w3p0/copy" target="_blank" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);border-radius:var(--radius);text-decoration:none;transition:all 0.15s;">
+            <span style="font-size:18px;">📋</span>
+            <div>
+              <div style="color:var(--gold);font-size:12px;font-weight:500;letter-spacing:0.06em;">Abrir plantilla oficial</div>
+              <div style="color:var(--text3);font-size:11px;margin-top:2px;">Hacé clic para copiarla a tu Drive → completá los datos → pegá la URL abajo</div>
+            </div>
+            <span style="color:var(--gold);margin-left:auto;font-size:14px;">→</span>
+          </a>
         </div>
-        <div class="import-url-hint" style="margin-top:8px;border-left-color:var(--blue);">
-          <strong style="color:var(--blue);">Hojas requeridas:</strong> <code style="color:var(--text2);">articulos</code> · <code style="color:var(--text2);">paises</code> · <code style="color:var(--text2);">agentes</code> · <code style="color:var(--text2);">tarifas</code>
+        <div class="import-url-hint">
+          <strong>Pasos:</strong><br>
+          1. Abrí la plantilla → Google te pide hacer una copia en tu Drive → aceptá<br>
+          2. Completá los datos en las 4 hojas<br>
+          3. Pegá la URL de tu copia acá abajo
         </div>
         <div class="import-warn" id="imp-warn-1"></div>
       </div>
