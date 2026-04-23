@@ -1,0 +1,2533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LexQuote</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f0d;
+    --surface: #161714;
+    --surface2: #1e1f1c;
+    --surface3: #272824;
+    --border: #2e2f2a;
+    --border2: #3a3b35;
+    --gold: #c9a84c;
+    --gold2: #e8c97a;
+    --gold-dim: rgba(201,168,76,0.12);
+    --gold-glow: rgba(201,168,76,0.06);
+    --text: #e8e6df;
+    --text2: #9a9890;
+    --text3: #5c5c57;
+    --green: #6dbb8a;
+    --green-dim: rgba(109,187,138,0.12);
+    --red: #d4695a;
+    --red-dim: rgba(212,105,90,0.12);
+    --blue: #6b9fd4;
+    --blue-dim: rgba(107,159,212,0.12);
+    --radius: 6px; --radius2: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; min-height: 100vh; }
+
+  /* ── CONFIG SCREEN ── */
+  #config-screen {
+    display: none; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 70%);
+  }
+  .config-box {
+    width: 640px; max-width: 100%;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 16px; overflow: hidden;
+  }
+  .config-header {
+    padding: 32px 36px 24px;
+    background: linear-gradient(135deg, var(--gold-glow), transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .config-logo { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 500; color: var(--gold); }
+  .config-logo span { color: var(--text2); font-weight: 300; font-size: 20px; }
+  .config-subtitle { font-size: 11px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 6px; }
+  .config-body { padding: 28px 36px; }
+  .config-intro { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 24px; }
+  .config-intro strong { color: var(--gold); }
+  .config-steps { background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); padding: 18px 20px; margin-bottom: 24px; }
+  .config-steps-title { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 12px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; padding: 6px 0; font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .step-num { background: var(--gold-dim); color: var(--gold); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; }
+  .config-fields { display: flex; flex-direction: column; gap: 14px; }
+  .config-field label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); display: block; margin-bottom: 6px; }
+  .config-field input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px;
+    padding: 10px 14px; outline: none; transition: border-color 0.15s;
+  }
+  .config-field input:focus { border-color: var(--gold); background: var(--surface3); }
+  .config-field input::placeholder { color: var(--text3); }
+  .config-footer { padding: 20px 36px; border-top: 1px solid var(--border); background: var(--surface2); display: flex; gap: 12px; justify-content: flex-end; align-items: center; }
+  .config-hint { font-size: 11px; color: var(--text3); flex: 1; }
+  .config-error { color: var(--red); font-size: 11px; padding: 10px 14px; background: var(--red-dim); border-radius: var(--radius); border: 1px solid rgba(212,105,90,0.2); display: none; }
+
+  /* ── APP ── */
+  #app { display: block; }
+
+  .header {
+    padding: 18px 36px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(180deg, rgba(201,168,76,0.04) 0%, transparent 100%);
+    position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--gold); letter-spacing: 0.04em; }
+  .logo span { color: var(--text2); font-weight: 300; font-size: 15px; }
+  .header-tag { font-size: 10px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--border); padding: 3px 8px; border-radius: 2px; }
+
+  .sync-indicator {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; letter-spacing: 0.08em; color: var(--text3);
+  }
+  .sync-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text3); transition: background 0.4s;
+  }
+  .sync-dot.connected { background: var(--green); box-shadow: 0 0 6px rgba(109,187,138,0.5); }
+  .sync-dot.syncing { background: var(--gold); animation: pulse 0.8s infinite; }
+  .sync-dot.error { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .nav { display: flex; gap: 4px; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 36px; }
+  .nav-btn { padding: 13px 18px; background: none; border: none; color: var(--text3); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; position: relative; top: 1px; }
+  .nav-btn:hover { color: var(--text2); }
+  .nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .main { padding: 32px 36px; max-width: 1400px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 26px; }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 400; color: var(--text); letter-spacing: 0.02em; line-height: 1; }
+  .section-title small { display: block; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 5px; font-weight: 400; }
+  .highlight-bar { height: 3px; background: linear-gradient(90deg, var(--gold), transparent); width: 40px; margin-top: 8px; border-radius: 2px; }
+
+  .btn { padding: 9px 18px; border-radius: var(--radius); border: none; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.18s; display: inline-flex; align-items: center; gap: 7px; }
+  .btn-primary { background: var(--gold); color: #0e0f0d; font-weight: 500; }
+  .btn-primary:hover { background: var(--gold2); transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid transparent; }
+  .btn-danger:hover { border-color: var(--red); }
+  .btn-sm { padding: 5px 10px; font-size: 10px; }
+  .btn-icon { padding: 5px 7px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius2); overflow: hidden; }
+  .card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); }
+  .card-title { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text2); }
+  .badge { background: var(--gold-dim); color: var(--gold); padding: 3px 8px; border-radius: 2px; font-size: 10px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 11px 15px; text-align: left; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border); font-weight: 400; white-space: nowrap; }
+  td { padding: 13px 15px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.015); }
+  .td-id { color: var(--gold); font-size: 11px; letter-spacing: 0.06em; }
+  .td-muted { color: var(--text2); font-size: 12px; }
+  .td-mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+  .td-green { color: var(--green); }
+  .td-red { color: var(--red); }
+
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius2); width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; animation: slideUp 0.22s ease; }
+  @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, var(--gold-glow), transparent); }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 500; color: var(--gold); }
+  .modal-close { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 4px; transition: color 0.15s; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 22px; }
+  .modal-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; background: var(--surface2); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+  input, select, textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 9px 11px; outline: none; transition: border-color 0.15s; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); background: var(--surface3); }
+  input::placeholder { color: var(--text3); }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 72px; }
+  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235c5c57' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; padding-right: 30px; }
+  .input-group { position: relative; }
+  .input-prefix { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 12px; pointer-events: none; }
+  .input-group input { padding-left: 26px; }
+
+  /* Cotizador */
+  .cotizador-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .resultado-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius2); padding: 18px; }
+  .resultado-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .resultado-row:last-child { border-bottom: none; }
+  .resultado-label { color: var(--text2); font-size: 12px; }
+  .resultado-value { font-size: 14px; font-weight: 500; color: var(--text); }
+  .ganancia-display { background: linear-gradient(135deg, var(--green-dim), transparent); border: 1px solid rgba(109,187,138,0.2); border-radius: var(--radius2); padding: 22px; text-align: center; margin-top: 16px; }
+  .ganancia-pct { font-family: 'Cormorant Garamond', serif; font-size: 54px; font-weight: 300; color: var(--green); line-height: 1; }
+  .ganancia-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-top: 5px; }
+  .ganancia-monto { margin-top: 6px; font-size: 16px; color: var(--green); }
+  .ganancia-display.negativa { background: linear-gradient(135deg, var(--red-dim), transparent); border-color: rgba(212,105,90,0.2); }
+  .ganancia-display.negativa .ganancia-pct, .ganancia-display.negativa .ganancia-monto { color: var(--red); }
+
+  /* Proveedores */
+  .prov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 14px; }
+  .prov-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius2); padding: 16px; transition: border-color 0.2s; }
+  .prov-card:hover { border-color: var(--border2); }
+  .prov-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .prov-name { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 500; color: var(--text); }
+  .prov-country { font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+  .prov-detail { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .prov-detail:last-child { border-bottom: none; }
+  .prov-detail-label { color: var(--text3); }
+
+  /* Comparador */
+  .comp-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius2); overflow: hidden; }
+  .comp-head { padding: 16px 22px; background: var(--surface2); border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 10px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+  .comp-row { padding: 13px 22px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 10px; align-items: center; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  .comp-row:last-child { border-bottom: none; }
+  .comp-row:hover { background: rgba(255,255,255,0.02); }
+
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; }
+  .pill-green { background: var(--green-dim); color: var(--green); }
+  .pill-red { background: var(--red-dim); color: var(--red); }
+  .pill-gold { background: var(--gold-dim); color: var(--gold); }
+  .pill-blue { background: var(--blue-dim); color: var(--blue); }
+
+  .no-data { text-align: center; padding: 52px 20px; color: var(--text3); }
+  .no-data-icon { font-size: 28px; opacity: 0.2; margin-bottom: 10px; }
+  .no-data-text { font-size: 12px; letter-spacing: 0.06em; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius2); padding: 16px 18px; }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; color: var(--gold); line-height: 1; }
+  .stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-top: 4px; }
+
+  .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; height: 14px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  #login-screen { display:none; position:fixed; inset:0; align-items:center; justify-content:center; padding:24px; background:var(--bg); z-index:9999; overflow-y:auto; }
+  .login-box { width:400px; max-width:100%; background:var(--surface); border:1px solid var(--border2); border-radius:16px; overflow:hidden; }
+  .login-error { color:var(--red); font-size:11px; padding:10px 14px; background:var(--red-dim); border-radius:var(--radius); border:1px solid rgba(212,105,90,0.2); display:none; margin-bottom:4px; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .fade-in { animation: fadeIn 0.28s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; }
+  .toast { padding: 11px 18px; border-radius: var(--radius); font-size: 12px; letter-spacing: 0.05em; animation: fadeIn 0.2s ease; }
+  .toast-ok { background: var(--green-dim); border: 1px solid rgba(109,187,138,0.3); color: var(--green); }
+  .toast-err { background: var(--red-dim); border: 1px solid rgba(212,105,90,0.3); color: var(--red); }
+  .toast-info { background: var(--blue-dim); border: 1px solid rgba(107,159,212,0.3); color: var(--blue); }
+
+  /* Settings button */
+  .btn-settings { background: none; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text3); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; padding: 6px 12px; cursor: pointer; transition: all 0.15s; }
+  .btn-settings:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* Importar modal */
+  .import-step { display: none; }
+  .import-step.active { display: block; }
+  .import-progress { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .import-progress-item { display: flex; align-items: center; gap: 10px; font-size: 12px; padding: 9px 13px; background: var(--surface2); border-radius: var(--radius); border: 1px solid var(--border); }
+  .import-progress-item .imp-icon { font-size: 14px; width: 20px; text-align: center; }
+  .import-progress-item .imp-label { flex: 1; color: var(--text2); }
+  .import-progress-item .imp-count { color: var(--text3); font-size: 11px; }
+  .import-progress-item.done { border-color: rgba(109,187,138,0.3); }
+  .import-progress-item.done .imp-icon { color: var(--green); }
+  .import-progress-item.done .imp-label { color: var(--text); }
+  .import-progress-item.done .imp-count { color: var(--green); }
+  .import-progress-item.error { border-color: rgba(212,105,90,0.3); }
+  .import-progress-item.error .imp-icon { color: var(--red); }
+  .import-progress-item.loading .imp-icon { animation: pulse 0.8s infinite; color: var(--gold); }
+  .import-url-hint { font-size: 11px; color: var(--text3); line-height: 1.6; margin-top: 8px; padding: 10px 13px; background: var(--surface2); border-radius: var(--radius); border-left: 2px solid var(--gold); }
+  .import-url-hint strong { color: var(--gold); }
+  .import-warn { font-size: 11px; color: var(--red); padding: 9px 13px; background: var(--red-dim); border-radius: var(--radius); border: 1px solid rgba(212,105,90,0.2); margin-top: 10px; display: none; }
+  .import-validation { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+  .import-val-row { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; padding: 7px 11px; border-radius: var(--radius); }
+  .import-val-ok { background: var(--green-dim); color: var(--green); }
+  .import-val-warn { background: rgba(201,168,76,0.08); color: var(--gold); }
+  .import-val-err { background: var(--red-dim); color: var(--red); }
+  .import-summary { background: var(--surface2); border-radius: var(--radius2); padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .import-summary-item { display: flex; flex-direction: column; }
+  .import-summary-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); line-height: 1; }
+  .import-summary-lbl { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     PANTALLA DE CONFIGURACIÓN FIREBASE
+══════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;">
+  <div class="login-box">
+    <div style="padding:32px 36px 24px;background:linear-gradient(135deg,var(--gold-glow),transparent);border-bottom:1px solid var(--border);">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--gold);">LexQuote</div>
+      <div style="font-size:11px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;margin-top:6px;">Acceso al sistema</div>
+    </div>
+    <div style="padding:28px 36px;display:flex;flex-direction:column;gap:14px;">
+      <div id="login-error" class="login-error"></div>
+      <div class="config-field"><label>Usuario</label><input type="text" id="login-user" placeholder="tu@email.com" autocomplete="username"></div>
+      <div class="config-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    </div>
+    <div style="padding:16px 36px;border-top:1px solid var(--border);background:var(--surface2);display:flex;justify-content:flex-end;">
+      <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Ingresar →</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<div id="config-screen">
+  <div class="config-box">
+    <div class="config-header">
+      <div class="config-logo">LexQuote</div>
+      <div class="config-subtitle">Configuración de base de datos compartida</div>
+    </div>
+    <div class="config-body">
+      <div class="config-intro">
+        Esta app usa <strong>Firebase Firestore</strong> para sincronizar los datos en tiempo real entre todos los usuarios.
+        Ingresá las credenciales de tu proyecto Firebase para conectar. <strong>Solo necesitás hacerlo una vez</strong> — quedan guardadas en este navegador.
+      </div>
+
+      <div class="config-steps">
+        <div class="config-steps-title">Cómo obtener las credenciales</div>
+        <div class="step"><div class="step-num">1</div><div>Entrá a <strong style="color:var(--gold)">console.firebase.google.com</strong> → Crear proyecto</div></div>
+        <div class="step"><div class="step-num">2</div><div>En el proyecto → <strong>Firestore Database</strong> → Crear base de datos → Modo de prueba</div></div>
+        <div class="step"><div class="step-num">3</div><div>Configuración del proyecto (⚙️) → Tus apps → ícono Web <strong>&lt;/&gt;</strong> → Registrar app</div></div>
+        <div class="step"><div class="step-num">4</div><div>Copiá los valores del bloque <strong>firebaseConfig</strong> y pegálos abajo</div></div>
+      </div>
+
+      <div id="config-error" class="config-error"></div>
+
+      <div class="config-fields">
+        <div class="config-field">
+          <label>API Key</label>
+          <input type="text" id="cfg-apiKey" placeholder="AIzaSy...">
+        </div>
+        <div class="config-field">
+          <label>Auth Domain</label>
+          <input type="text" id="cfg-authDomain" placeholder="mi-proyecto.firebaseapp.com">
+        </div>
+        <div class="config-field">
+          <label>Project ID</label>
+          <input type="text" id="cfg-projectId" placeholder="mi-proyecto-id">
+        </div>
+        <div class="config-field">
+          <label>Storage Bucket</label>
+          <input type="text" id="cfg-storageBucket" placeholder="mi-proyecto.appspot.com">
+        </div>
+        <div class="config-field">
+          <label>Messaging Sender ID</label>
+          <input type="text" id="cfg-messagingSenderId" placeholder="123456789">
+        </div>
+        <div class="config-field">
+          <label>App ID</label>
+          <input type="text" id="cfg-appId" placeholder="1:123...">
+        </div>
+      </div>
+    </div>
+    <div class="config-footer">
+      <span class="config-hint">Los datos se comparten entre todos los que usen esta configuración.</span>
+      <button class="btn btn-primary" id="btn-conectar" onclick="conectarFirebase()">Conectar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     APP PRINCIPAL
+══════════════════════════════════════════════ -->
+<div id="app">
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">LexQuote</div>
+      <div class="header-tag">Cotizador Profesional</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="sync-indicator">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">Conectando...</span>
+      </div>
+      <button class="btn-settings" onclick="mostrarConfiguracion()">⚙ Reconfigurar</button>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-btn active" data-section="multi">⊹ Cotizador</button>
+    <button class="nav-btn" data-section="articulos">◈ Artículos</button>
+    <button class="nav-btn" data-section="agentes">◉ Proveedores</button>
+    <button class="nav-btn" data-section="proveedores">◇ Países</button>
+    <button class="nav-btn" data-section="comparador">⊞ Comparador</button>
+    <button class="nav-btn" data-import="true" style="margin-left:auto;color:var(--gold);border-bottom-color:transparent;">↑ Importar Sheets</button>
+  </nav>
+
+  <main class="main">
+
+    <!-- COTIZADOR -->
+    <section class="section fade-in" id="sec-cotizador">
+      <div class="section-header">
+        <div class="section-title">
+          <small>Módulo Principal</small>
+          Cotizador
+          <div class="highlight-bar"></div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-ghost" onclick="limpiarCotizador()">✕ Limpiar</button>
+          <button class="btn btn-primary" onclick="exportarCotizacion()">↓ Exportar</button>
+        </div>
+      </div>
+      <div class="cotizador-grid">
+        <div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Configuración del Servicio</span></div>
+            <div style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+              <div class="form-group">
+                <label>País</label>
+                <select id="cot-pais" onchange="seleccionarPaisCotizador()">
+                  <option value="">— Seleccionar país —</option>
+                </select>
+              </div>
+              <div class="form-group" id="cot-agente-group" style="display:none;">
+                <label>Proveedor</label>
+                <select id="cot-proveedor" onchange="actualizarCotizador()">
+                  <option value="">— Seleccionar proveedor —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Artículo / Tipo de Trabajo</label>
+                <select id="cot-articulo" onchange="seleccionarArticulo()">
+                  <option value="">— Seleccionar artículo —</option>
+                </select>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Costo País</label>
+                  <div class="input-group">
+                    <span class="input-prefix">$</span>
+                    <input type="number" id="cot-costo" placeholder="0.00" step="0.01" min="0" oninput="calcularGanancia()">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Nuestra Tarifa</label>
+                  <div class="input-group">
+                    <span class="input-prefix">$</span>
+                    <input type="number" id="cot-tarifa" placeholder="0.00" step="0.01" min="0" oninput="calcularGanancia()">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Moneda</label>
+                <select id="cot-moneda" onchange="calcularGanancia()">
+                  <option value="USD">USD — Dólar</option>
+                  <option value="EUR">EUR — Euro</option>
+                  <option value="ARS">ARS — Peso Arg.</option>
+                  <option value="GBP">GBP — Libra</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Notas del Servicio</label>
+                <textarea id="cot-notas" placeholder="Descripción, condiciones, observaciones..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="resultado-box">
+            <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;">Resumen del Cálculo</div>
+            <div class="resultado-row"><span class="resultado-label">Costo País</span><span class="resultado-value td-mono" id="res-costo">—</span></div>
+            <div class="resultado-row"><span class="resultado-label">Nuestra Tarifa</span><span class="resultado-value td-mono" id="res-tarifa">—</span></div>
+            <div class="resultado-row" id="res-courier-row" style="display:none;"><span class="resultado-label">Courier</span><span class="resultado-value td-mono td-green" id="res-courier">—</span></div>
+            <div class="resultado-row" id="res-poa-row" style="display:none;"><span class="resultado-label">PoA</span><span class="resultado-value td-mono td-green" id="res-poa">—</span></div>
+            <div class="resultado-row" id="res-total-row" style="display:none;"><span class="resultado-label" style="color:var(--text);font-weight:500;">Total Cliente</span><span class="resultado-value td-mono" id="res-total" style="font-size:15px;color:var(--gold);">—</span></div>
+            <div class="resultado-row"><span class="resultado-label">Diferencia Neta</span><span class="resultado-value td-mono" id="res-diferencia">—</span></div>
+            <div class="resultado-row"><span class="resultado-label">Artículo</span><span class="resultado-value" id="res-articulo" style="font-size:12px;">—</span></div>
+            <div class="resultado-row"><span class="resultado-label">País</span><span class="resultado-value" id="res-proveedor" style="font-size:12px;">—</span></div>
+            <div class="resultado-row"><span class="resultado-label">Proveedor</span><span class="resultado-value" id="res-agente" style="font-size:12px;">—</span></div>
+          </div>
+          <div class="ganancia-display" id="ganancia-display">
+            <div class="ganancia-pct" id="ganancia-pct">—</div>
+            <div class="ganancia-label">Margen de Ganancia</div>
+            <div class="ganancia-monto" id="ganancia-monto"></div>
+          </div>
+          <div class="resultado-box" id="info-articulo" style="display:none;">
+            <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Datos del Artículo</div>
+            <div class="resultado-row"><span class="resultado-label">ID</span><span class="resultado-value td-id" id="art-id-info">—</span></div>
+            <div class="resultado-row"><span class="resultado-label">Tasas</span><span class="resultado-value" id="art-tasas-info" style="font-size:12px;">—</span></div>
+            <div class="resultado-row"><span class="resultado-label">Monto Base</span><span class="resultado-value td-mono" id="art-monto-info">—</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARTÍCULOS -->
+    <section class="section fade-in" id="sec-articulos">
+      <div class="section-header">
+        <div class="section-title"><small>Gestión</small>Artículos<div class="highlight-bar"></div></div>
+        <button class="btn btn-primary" onclick="abrirModalArticulo()">+ Nuevo Artículo</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-value" id="stat-art">0</div><div class="stat-label">Artículos</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-agentes">0</div><div class="stat-label">Proveedores</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-prov">0</div><div class="stat-label">Países</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-sync" style="font-size:14px;color:var(--green);">●</div><div class="stat-label">Sync en tiempo real</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Listado de Artículos</span>
+          <span class="badge" id="badge-art">0 artículos</span>
+        </div>
+        <div id="tabla-articulos"><div class="no-data"><div class="no-data-icon">◈</div><div class="no-data-text">Sin artículos cargados</div></div></div>
+      </div>
+    </section>
+
+    <!-- AGENTES / PROVEEDORES -->
+    <section class="section fade-in" id="sec-agentes">
+      <div class="section-header">
+        <div class="section-title"><small>Gestión</small>Proveedores<div class="highlight-bar"></div></div>
+        <button class="btn btn-primary" onclick="abrirModalAgente()">+ Nuevo Proveedor</button>
+      </div>
+      <div id="grid-agentes"><div class="no-data"><div class="no-data-icon">◉</div><div class="no-data-text">Sin proveedores cargados</div></div></div>
+    </section>
+
+    <!-- PAÍSES -->
+    <section class="section fade-in" id="sec-proveedores">
+      <div class="section-header">
+        <div class="section-title"><small>Gestión</small>Países<div class="highlight-bar"></div></div>
+        <button class="btn btn-primary" onclick="abrirModalProveedor()">+ Nuevo País</button>
+      </div>
+      <div id="grid-proveedores"><div class="no-data"><div class="no-data-icon">◇</div><div class="no-data-text">Sin países cargados</div></div></div>
+    </section>
+
+    <!-- COMPARADOR -->
+    <section class="section fade-in" id="sec-comparador">
+      <div class="section-header">
+        <div class="section-title"><small>Análisis</small>Comparador de Tarifas<div class="highlight-bar"></div></div>
+        <select id="comp-proveedor" onchange="renderComparador()" style="padding:7px 30px 7px 11px;width:220px;">
+          <option value="">Todos los países</option>
+        </select>
+      </div>
+      <div class="comp-section">
+        <div class="comp-head"><div>Artículo / País</div><div>ID</div><div>Costo Prov.</div><div>Nuestra Tarifa</div><div>Margen %</div></div>
+        <div id="tabla-comparador"><div class="no-data" style="padding:44px;"><div class="no-data-icon">⊞</div><div class="no-data-text">Cargá artículos y países</div></div></div>
+      </div>
+    </section>
+    <section class="section active fade-in" id="sec-multi">
+      <div class="section-header">
+        <div class="section-title"><small>Módulo</small>Cotizador Multi-País<div class="highlight-bar"></div></div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-ghost" onclick="mLimpiar()">&#10005; Limpiar</button>
+          <button class="btn btn-primary" onclick="mExportar()">&#8595; Exportar</button>
+        </div>
+      </div>
+      <div class="cotizador-grid">
+        <div>
+          <div id="m-svcs-col"></div>
+          <button onclick="mAgregar()" style="width:100%;margin-top:14px;padding:12px;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius2);color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">+ Agregar País</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="resultado-box">
+            <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;">Resumen del Cálculo</div>
+            <div class="resultado-row"><span class="resultado-label">Países</span><span class="resultado-value td-mono" id="m-res-paises">—</span></div>
+            <div class="resultado-row"><span class="resultado-label">Subtotal Tarifas</span><span class="resultado-value td-mono" id="m-res-subtotal">—</span></div>
+            <div class="resultado-row" id="m-res-courier-row" style="display:none;"><span class="resultado-label">Courier</span><span class="resultado-value td-mono td-green" id="m-res-courier">—</span></div>
+            <div class="resultado-row" id="m-res-poa-row" style="display:none;"><span class="resultado-label">PoA</span><span class="resultado-value td-mono td-green" id="m-res-poa">—</span></div>
+            <div class="resultado-row" style="border-top:1px solid var(--border2);margin-top:4px;padding-top:8px;"><span class="resultado-label" style="color:var(--text);font-weight:500;">Total a Cobrar</span><span class="resultado-value td-mono" id="m-total-valor" style="font-size:16px;color:var(--gold);">—</span></div>
+          </div>
+          <div class="ganancia-display" id="m-ganancia-display">
+            <div class="ganancia-pct" id="m-ganancia-pct">—</div>
+            <div class="ganancia-label">Margen de Ganancia</div>
+            <div class="ganancia-monto" id="m-ganancia-monto"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL ARTÍCULO -->
+<div class="overlay" id="modal-articulo">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-art-title">Nuevo Artículo</span>
+      <button class="modal-close" onclick="cerrarModal('modal-articulo')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group form-full"><label>Nombre *</label><input type="text" id="art-nombre" placeholder="Ej: Registro de Marca Nacional"></div>
+        <div class="form-group"><label>ID / Código *</label><input type="text" id="art-id" placeholder="Ej: TM-001"></div>
+        <div class="form-group"><label>Monto Base</label><div class="input-group"><span class="input-prefix">$</span><input type="number" id="art-monto" placeholder="0.00" step="0.01" min="0"></div></div>
+        <div class="form-group form-full"><label>Tasas Aplicables</label><input type="text" id="art-tasas" placeholder="Ej: Clase de Niza, Tasa INPI, USPTO..."></div>
+        <div class="form-group form-full"><label>Artículos Vinculados <span style="color:var(--text3);font-weight:400;">(códigos separados por coma, ej: 06,07)</span></label><input type="text" id="art-vinculados" placeholder="Ej: 06,07,08"></div>
+        <div class="form-group form-full"><label>Descripción</label><textarea id="art-desc" placeholder="Detalles adicionales..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-articulo')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-art" onclick="guardarArticulo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PROVEEDOR -->
+<div class="overlay" id="modal-proveedor">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-prov-title">Nuevo País</span>
+      <button class="modal-close" onclick="cerrarModal('modal-proveedor')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group form-full"><label>País *</label><input type="text" id="prov-nombre" placeholder="Ej: Brasil, Estados Unidos, España..."></div>
+        <div class="form-group"><label>Moneda</label>
+          <select id="prov-moneda">
+            <option value="USD">USD — Dólar</option><option value="EUR">EUR — Euro</option>
+            <option value="ARS">ARS — Peso Arg.</option><option value="GBP">GBP — Libra</option>
+            <option value="BRL">BRL — Real</option><option value="MXN">MXN — Peso Mex.</option>
+            <option value="CLP">CLP — Peso Chi.</option><option value="COP">COP — Peso Col.</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px;padding-top:18px;">
+          <label style="margin:0;white-space:nowrap;">Courier</label>
+          <input type="checkbox" id="prov-courier" onchange="toggleCourierTarifa()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--gold);">
+        </div>
+        <div class="form-group" id="courier-tarifa-group" style="display:none;">
+          <label>Tarifa Courier</label>
+          <div class="input-group"><span class="input-prefix">$</span><input type="number" id="prov-courier-tarifa" placeholder="0.00" step="0.01" min="0"></div>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px;padding-top:18px;">
+          <label style="margin:0;white-space:nowrap;">PoA</label>
+          <input type="checkbox" id="prov-poa" onchange="togglePoaTarifa()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--gold);">
+        </div>
+        <div class="form-group" id="poa-tarifa-group" style="display:none;">
+          <label>Tarifa PoA</label>
+          <div class="input-group"><span class="input-prefix">$</span><input type="number" id="prov-poa-tarifa" placeholder="0.00" step="0.01" min="0"></div>
+        </div>
+      </div>
+      <div class="form-group form-full" style="margin-top:14px;">
+        <label>Requerimientos</label>
+        <textarea id="prov-requerimientos" placeholder="Texto que se pegará automáticamente en las Notas del Servicio al seleccionar este país..." style="min-height:80px;"></textarea>
+      </div>
+      <div style="margin-top:18px;">
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Tarifas por Artículo</div>
+        <div id="prov-tarifas-lista" style="max-height:220px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-proveedor')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-prov" onclick="guardarProveedor()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGENTE (PROVEEDOR) -->
+<div class="overlay" id="modal-agente">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-agente-title">Nuevo Proveedor</span>
+      <button class="modal-close" onclick="cerrarModal('modal-agente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group form-full"><label>Nombre *</label><input type="text" id="agente-nombre" placeholder="Ej: Smith & Associates IP"></div>
+        <div class="form-group">
+          <label>País *</label>
+          <select id="agente-pais">
+            <option value="">— Seleccionar país —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Prioridad</label>
+          <input type="number" id="agente-prioridad" placeholder="1 = favorito" min="1" step="1">
+        </div>
+      </div>
+      <div style="margin-top:18px;">
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Tarifas por Artículo</div>
+        <div id="agente-tarifas-lista" style="max-height:260px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-agente')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-agente" onclick="guardarAgente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<!-- MODAL IMPORTAR GOOGLE SHEETS -->
+<div class="overlay" id="modal-importar">
+  <div class="modal" style="width:620px;">
+    <div class="modal-header">
+      <span class="modal-title">↑ Importar desde Google Sheets</span>
+      <button class="modal-close" onclick="cerrarModal('modal-importar')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- PASO 1: URL -->
+      <div class="import-step active" id="imp-step-1">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>URL del Google Sheet publicado</label>
+          <input type="text" id="imp-url" placeholder="https://docs.google.com/spreadsheets/d/XXXXXXXX/edit" style="font-size:11px;">
+        </div>
+        <div class="import-url-hint">
+          <strong>¿Cómo publicar el Sheet?</strong><br>
+          1. Abrí el Sheet → <strong>Archivo → Compartir → Publicar en la web</strong><br>
+          2. Asegurate de que también esté compartido como <strong>"Cualquiera con el enlace puede ver"</strong><br>
+          3. Pegá la URL del Sheet acá arriba (la URL normal de edición funciona)
+        </div>
+        <div class="import-url-hint" style="margin-top:8px;border-left-color:var(--blue);">
+          <strong style="color:var(--blue);">Hojas requeridas:</strong> <code style="color:var(--text2);">articulos</code> · <code style="color:var(--text2);">paises</code> · <code style="color:var(--text2);">agentes</code> · <code style="color:var(--text2);">tarifas</code>
+        </div>
+        <div class="import-warn" id="imp-warn-1"></div>
+      </div>
+
+      <!-- PASO 2: Validación previa -->
+      <div class="import-step" id="imp-step-2">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Revisá los datos antes de importar a Firebase:</div>
+        <div class="import-summary" id="imp-summary">
+          <div class="import-summary-item"><div class="import-summary-num" id="imp-n-art">0</div><div class="import-summary-lbl">Artículos</div></div>
+          <div class="import-summary-item"><div class="import-summary-num" id="imp-n-paises">0</div><div class="import-summary-lbl">Países</div></div>
+          <div class="import-summary-item"><div class="import-summary-num" id="imp-n-agentes">0</div><div class="import-summary-lbl">Proveedores</div></div>
+          <div class="import-summary-item"><div class="import-summary-num" id="imp-n-tarifas">0</div><div class="import-summary-lbl">Tarifas</div></div>
+        </div>
+        <div class="import-validation" id="imp-validation"></div>
+        <div class="import-warn" id="imp-warn-2"></div>
+      </div>
+
+      <!-- PASO 3: Progreso -->
+      <div class="import-step" id="imp-step-3">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Escribiendo en Firebase Firestore...</div>
+        <div class="import-progress">
+          <div class="import-progress-item" id="imp-prog-art"><span class="imp-icon">◈</span><span class="imp-label">Artículos</span><span class="imp-count" id="imp-prog-art-c">—</span></div>
+          <div class="import-progress-item" id="imp-prog-paises"><span class="imp-icon">◇</span><span class="imp-label">Países</span><span class="imp-count" id="imp-prog-paises-c">—</span></div>
+          <div class="import-progress-item" id="imp-prog-agentes"><span class="imp-icon">◉</span><span class="imp-label">Proveedores</span><span class="imp-count" id="imp-prog-agentes-c">—</span></div>
+        </div>
+      </div>
+
+      <!-- PASO 4: Resultado -->
+      <div class="import-step" id="imp-step-4">
+        <div style="text-align:center;padding:16px 0 8px;">
+          <div style="font-size:36px;margin-bottom:8px;" id="imp-result-icon">✓</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:6px;" id="imp-result-title">Importación completada</div>
+          <div style="font-size:12px;color:var(--text2);" id="imp-result-msg"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer" id="imp-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-importar')" id="imp-btn-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="imp-btn-next" onclick="impNextStep()">Verificar datos →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {
+  getFirestore, collection, doc, setDoc, deleteDoc,
+  onSnapshot, serverTimestamp, writeBatch
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+window._db = null;
+window._unsubArticulos = null;
+window._unsubProveedores = null;
+window._articulos = [];
+window._proveedores = [];
+window._editingArt = null;
+window._editingProv = null;
+window._agentes = [];
+window._editingAgente = null;
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+window.uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+window.fmt = (n, moneda) => {
+  if (n === null || n === undefined || n === '' || isNaN(n)) return '—';
+  const sym = { USD:'$', EUR:'€', ARS:'$', GBP:'£', BRL:'R$', MXN:'$', CLP:'$', COP:'$' };
+  const m = moneda || 'USD';
+  return (sym[m]||'') + parseFloat(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' ' + m;
+};
+
+window.esc = s => s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+
+window.cerrarModal = id => document.getElementById(id).classList.remove('open');
+
+window.toast = (msg, tipo) => {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + (tipo || 'ok');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+};
+
+function setSyncState(state, label) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot ' + state;
+  lbl.textContent = label;
+}
+
+// ══════════════════════════════════════════
+// FIREBASE CONFIG
+// ══════════════════════════════════════════
+function getCfg() {
+  try { return JSON.parse(localStorage.getItem('ipq_firebase_cfg') || 'null'); } catch(e) { return null; }
+}
+
+window.conectarFirebase = async () => {
+  const btn = document.getElementById('btn-conectar');
+  const errEl = document.getElementById('config-error');
+  errEl.style.display = 'none';
+
+  const cfg = {
+    apiKey: document.getElementById('cfg-apiKey').value.trim(),
+    authDomain: document.getElementById('cfg-authDomain').value.trim(),
+    projectId: document.getElementById('cfg-projectId').value.trim(),
+    storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
+    messagingSenderId: document.getElementById('cfg-messagingSenderId').value.trim(),
+    appId: document.getElementById('cfg-appId').value.trim(),
+  };
+
+  if (!cfg.apiKey || !cfg.projectId) {
+    errEl.textContent = 'API Key y Project ID son obligatorios.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Conectando...';
+
+  try {
+    await iniciarApp(cfg);
+    localStorage.setItem('ipq_firebase_cfg', JSON.stringify(cfg));
+  } catch(e) {
+    errEl.textContent = 'Error al conectar: ' + e.message + '. Verificá las credenciales.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Conectar →';
+  }
+};
+
+async function iniciarApp(cfg) {
+  const app = initializeApp(cfg, 'ipquote-' + cfg.projectId);
+  const db = getFirestore(app);
+  window._db = db;
+
+  // Test connection
+  await new Promise((resolve, reject) => {
+    const unsub = onSnapshot(
+      collection(db, 'articulos'),
+      () => { unsub(); resolve(); },
+      (err) => { unsub(); reject(err); }
+    );
+    setTimeout(() => reject(new Error('Timeout de conexión')), 8000);
+  });
+
+  // Show app
+  document.getElementById('config-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  setSyncState('connected', 'Sincronizado');
+
+  // Start listeners
+  iniciarListeners(db);
+}
+
+window.toggleCourierTarifa = () => {
+  const checked = document.getElementById('prov-courier').checked;
+  document.getElementById('courier-tarifa-group').style.display = checked ? 'block' : 'none';
+  if (!checked) document.getElementById('prov-courier-tarifa').value = '';
+};
+
+window.togglePoaTarifa = () => {
+  const checked = document.getElementById('prov-poa').checked;
+  document.getElementById('poa-tarifa-group').style.display = checked ? 'block' : 'none';
+  if (!checked) document.getElementById('prov-poa-tarifa').value = '';
+};
+
+const POA_TEXT = 'An original Power of Attorney duly apostilled is required.';
+
+window.actualizarNotasPais = () => {
+  const notas = document.getElementById('cot-notas');
+  const pais = window._proveedores.find(p => p.id === document.getElementById('cot-pais').value);
+
+  // Limpiar textos automáticos previos (PoA y requerimientos de cualquier país)
+  let texto = notas.value;
+  // Eliminar PoA text si estaba
+  texto = texto.replace('\n' + POA_TEXT, '').replace(POA_TEXT, '');
+  // Eliminar requerimientos previos de cualquier país
+  window._proveedores.forEach(p => {
+    if (p.requerimientos) {
+      texto = texto.replace('\n' + p.requerimientos, '').replace(p.requerimientos, '');
+    }
+  });
+  texto = texto.trim();
+
+  // Agregar los del país actual
+  const extras = [];
+  if (pais?.poa) extras.push(POA_TEXT);
+  if (pais?.requerimientos) extras.push(pais.requerimientos);
+
+  if (extras.length) {
+    notas.value = texto ? texto + '\n' + extras.join('\n') : extras.join('\n');
+  } else {
+    notas.value = texto;
+  }
+};
+
+// Alias para compatibilidad
+window.actualizarNotasPoa = window.actualizarNotasPais;
+
+function iniciarListeners(db) {
+  setSyncState('syncing', 'Sincronizando...');
+
+  // Artículos listener
+  if (window._unsubArticulos) window._unsubArticulos();
+  window._unsubArticulos = onSnapshot(collection(db, 'articulos'), snap => {
+    window._articulos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    window._articulos.sort((a,b) => (a.codigo||'').localeCompare(b.codigo||''));
+    setSyncState('connected', 'Sincronizado');
+    renderArticulos();
+    initCotizador();
+    renderComparador();
+    actualizarStats();
+  }, err => {
+    console.error(err);
+    setSyncState('error', 'Error de sync');
+    toast('Error de sincronización: ' + err.message, 'err');
+  });
+
+  // Países listener
+  if (window._unsubProveedores) window._unsubProveedores();
+  window._unsubProveedores = onSnapshot(collection(db, 'proveedores'), snap => {
+    window._proveedores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    window._proveedores.sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
+    setSyncState('connected', 'Sincronizado');
+    renderProveedores();
+    initCotizador();
+    poblarSelectProv('comp-proveedor', true);
+    renderComparador();
+    actualizarStats();
+  }, err => {
+    setSyncState('error', 'Error de sync');
+    toast('Error de sincronización: ' + err.message, 'err');
+  });
+
+  // Agentes (Proveedores) listener
+  if (window._unsubAgentes) window._unsubAgentes();
+  window._unsubAgentes = onSnapshot(collection(db, 'agentes'), snap => {
+    window._agentes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    window._agentes.sort((a,b) => (a.prioridad||99) - (b.prioridad||99));
+    renderAgentes();
+    initCotizador();
+    if (window._mSvcs && window._mSvcs.length === 0) { mAgregar(); }
+    actualizarStats();
+  }, err => {
+    setSyncState('error', 'Error de sync');
+    toast('Error de sincronización: ' + err.message, 'err');
+  });
+}
+
+function actualizarStats() {
+  document.getElementById('stat-art').textContent = window._articulos.length;
+  document.getElementById('stat-agentes').textContent = window._agentes.length;
+  document.getElementById('stat-prov').textContent = window._proveedores.length;
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+window.showSection = (id, btn) => {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'comparador') { poblarSelectProv('comp-proveedor', true); renderComparador(); }
+  if (id === 'agentes') { renderAgentes(); }
+};
+
+window.mostrarConfiguracion = () => {
+  if (confirm('¿Querés reconfigurar Firebase? Se desconectará la sesión actual.')) {
+    if (window._unsubArticulos) window._unsubArticulos();
+    if (window._unsubProveedores) window._unsubProveedores();
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('config-screen').style.display = 'flex';
+    const cfg = getCfg();
+    if (cfg) {
+      Object.keys(cfg).forEach(k => {
+        const el = document.getElementById('cfg-' + k);
+        if (el) el.value = cfg[k];
+      });
+    }
+  }
+};
+
+// ══════════════════════════════════════════
+// ARTÍCULOS
+// ══════════════════════════════════════════
+window.abrirModalArticulo = (id) => {
+  window._editingArt = id || null;
+  const art = id ? window._articulos.find(a => a.id === id) : null;
+  document.getElementById('modal-art-title').textContent = id ? 'Editar Artículo' : 'Nuevo Artículo';
+  document.getElementById('art-nombre').value = art?.nombre || '';
+  document.getElementById('art-id').value = art?.codigo || '';
+  document.getElementById('art-monto').value = art?.monto || '';
+  document.getElementById('art-tasas').value = art?.tasas || '';
+  document.getElementById('art-vinculados').value = art?.vinculados || '';
+  document.getElementById('art-desc').value = art?.desc || '';
+  document.getElementById('modal-articulo').classList.add('open');
+  setTimeout(() => document.getElementById('art-nombre').focus(), 80);
+};
+
+window.guardarArticulo = async () => {
+  const nombre = document.getElementById('art-nombre').value.trim();
+  const codigo = document.getElementById('art-id').value.trim();
+  if (!nombre || !codigo) { toast('Nombre e ID son obligatorios', 'err'); return; }
+
+  const btn = document.getElementById('btn-guardar-art');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  try {
+    const docId = window._editingArt || uid();
+    setSyncState('syncing', 'Guardando...');
+    await setDoc(doc(window._db, 'articulos', docId), {
+      nombre, codigo,
+      monto: parseFloat(document.getElementById('art-monto').value) || 0,
+      tasas: document.getElementById('art-tasas').value.trim(),
+      vinculados: document.getElementById('art-vinculados').value.trim(),
+      desc: document.getElementById('art-desc').value.trim(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    toast(window._editingArt ? 'Artículo actualizado' : 'Artículo guardado');
+    cerrarModal('modal-articulo');
+  } catch(e) {
+    toast('Error al guardar: ' + e.message, 'err');
+    setSyncState('error', 'Error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar';
+  }
+};
+
+window.eliminarArticulo = async (id) => {
+  if (!confirm('¿Eliminar este artículo?')) return;
+  try {
+    setSyncState('syncing', 'Eliminando...');
+    await deleteDoc(doc(window._db, 'articulos', id));
+    toast('Artículo eliminado');
+  } catch(e) {
+    toast('Error: ' + e.message, 'err');
+  }
+};
+
+function renderArticulos() {
+  const lista = window._articulos;
+  document.getElementById('badge-art').textContent = lista.length + (lista.length !== 1 ? ' artículos' : ' artículo');
+
+  if (!lista.length) {
+    document.getElementById('tabla-articulos').innerHTML = `<div class="no-data"><div class="no-data-icon">◈</div><div class="no-data-text">Sin artículos cargados</div></div>`;
+    return;
+  }
+
+  document.getElementById('tabla-articulos').innerHTML = `
+    <table><thead><tr>
+      <th>ID / Código</th><th>Nombre</th><th>Tasas</th><th>Monto Base</th><th>Descripción</th><th></th>
+    </tr></thead><tbody>
+    ${lista.map(a => `<tr>
+      <td class="td-id td-mono">${esc(a.codigo)}</td>
+      <td style="font-weight:500;">${esc(a.nombre)}</td>
+      <td class="td-muted">${esc(a.tasas||'—')}</td>
+      <td class="td-mono">${a.monto ? fmt(a.monto) : '—'}</td>
+      <td class="td-muted" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(a.desc||'—')}</td>
+      <td><div style="display:flex;gap:5px;">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="abrirModalArticulo('${a.id}')">✎</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="eliminarArticulo('${a.id}')">✕</button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ══════════════════════════════════════════
+// PAÍSES
+// ══════════════════════════════════════════
+window.abrirModalProveedor = (id) => {
+  window._editingProv = id || null;
+  const prov = id ? window._proveedores.find(p => p.id === id) : null;
+  document.getElementById('modal-prov-title').textContent = id ? 'Editar País' : 'Nuevo País';
+  document.getElementById('prov-nombre').value = prov?.nombre || '';
+  document.getElementById('prov-moneda').value = prov?.moneda || 'USD';
+  const courier = prov?.courier || false;
+  document.getElementById('prov-courier').checked = courier;
+  document.getElementById('courier-tarifa-group').style.display = courier ? 'block' : 'none';
+  document.getElementById('prov-courier-tarifa').value = prov?.courierTarifa || '';
+  const poa = prov?.poa || false;
+  document.getElementById('prov-poa').checked = poa;
+  document.getElementById('poa-tarifa-group').style.display = poa ? 'block' : 'none';
+  document.getElementById('prov-poa-tarifa').value = prov?.poaTarifa || '';
+  document.getElementById('prov-requerimientos').value = prov?.requerimientos || '';
+  document.getElementById('modal-proveedor').classList.add('open');
+  setTimeout(() => document.getElementById('prov-nombre').focus(), 80);
+};
+
+window.guardarProveedor = async () => {
+  const nombre = document.getElementById('prov-nombre').value.trim();
+  if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
+  const btn = document.getElementById('btn-guardar-prov');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    const docId = window._editingProv || uid();
+    setSyncState('syncing', 'Guardando...');
+    await setDoc(doc(window._db, 'proveedores', docId), {
+      nombre,
+      moneda: document.getElementById('prov-moneda').value,
+      courier: document.getElementById('prov-courier').checked,
+      courierTarifa: parseFloat(document.getElementById('prov-courier-tarifa').value) || 0,
+      poa: document.getElementById('prov-poa').checked,
+      poaTarifa: parseFloat(document.getElementById('prov-poa-tarifa').value) || 0,
+      requerimientos: document.getElementById('prov-requerimientos').value.trim(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    toast(window._editingProv ? 'País actualizado' : 'País guardado');
+    cerrarModal('modal-proveedor');
+  } catch(e) {
+    toast('Error al guardar: ' + e.message, 'err');
+    setSyncState('error', 'Error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar';
+  }
+};
+
+window.eliminarProveedor = async (id) => {
+  if (!confirm('¿Eliminar este país?')) return;
+  try {
+    setSyncState('syncing', 'Eliminando...');
+    await deleteDoc(doc(window._db, 'proveedores', id));
+    toast('País eliminado');
+  } catch(e) {
+    toast('Error: ' + e.message, 'err');
+  }
+};
+
+function renderProveedores() {
+  const lista = window._proveedores;
+  if (!lista.length) {
+    document.getElementById('grid-proveedores').innerHTML = `<div class="no-data"><div class="no-data-icon">◇</div><div class="no-data-text">Sin países cargados</div></div>`;
+    return;
+  }
+  document.getElementById('grid-proveedores').innerHTML = `<div class="prov-grid">` +
+    lista.map(p => {
+      const nAgentes = window._agentes.filter(a => a.paisId === p.id).length;
+      return `<div class="prov-card fade-in">
+        <div class="prov-card-header">
+          <div><div class="prov-name">${esc(p.nombre)}</div></div>
+          <div style="display:flex;gap:5px;">
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="abrirModalProveedor('${p.id}')">✎</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="eliminarProveedor('${p.id}')">✕</button>
+          </div>
+        </div>
+        <div class="prov-detail"><span class="prov-detail-label">Moneda</span><span class="pill pill-gold">${p.moneda}</span></div>
+        <div class="prov-detail"><span class="prov-detail-label">Courier</span><span class="${p.courier ? 'td-green' : ''}">${p.courier ? '✓ Sí — ' + (p.courierTarifa ? fmt(p.courierTarifa, p.moneda) : 'sin tarifa') : '✗ No'}</span></div>
+        <div class="prov-detail"><span class="prov-detail-label">PoA</span><span class="${p.poa ? 'td-green' : ''}">${p.poa ? '✓ Sí — ' + (p.poaTarifa ? fmt(p.poaTarifa, p.moneda) : 'sin tarifa') : '✗ No'}</span></div>
+        <div class="prov-detail"><span class="prov-detail-label">Proveedores</span><span>${nAgentes}</span></div>
+        ${p.requerimientos ? `<div class="prov-detail"><span class="prov-detail-label">Requerimientos</span><span class="td-green">✓</span></div>` : ''}
+      </div>`;
+    }).join('') + `</div>`;
+}
+
+// ══════════════════════════════════════════
+// AGENTES (PROVEEDORES)
+// ══════════════════════════════════════════
+window.abrirModalAgente = (id) => {
+  window._editingAgente = id || null;
+  const ag = id ? window._agentes.find(a => a.id === id) : null;
+  document.getElementById('modal-agente-title').textContent = id ? 'Editar Proveedor' : 'Nuevo Proveedor';
+  document.getElementById('agente-nombre').value = ag?.nombre || '';
+  document.getElementById('agente-prioridad').value = ag?.prioridad || '';
+
+  // Poblar select de países
+  const selPais = document.getElementById('agente-pais');
+  selPais.innerHTML = '<option value="">— Seleccionar país —</option>' +
+    window._proveedores.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('');
+  selPais.value = ag?.paisId || '';
+
+  // Tarifas
+  const tarifas = ag?.tarifas || {};
+  const tarifasCliente = ag?.tarifasCliente || {};
+  const lista = document.getElementById('agente-tarifas-lista');
+  if (!window._articulos.length) {
+    lista.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Primero cargá artículos</div>`;
+  } else {
+    lista.innerHTML =
+      `<div style="display:grid;grid-template-columns:1fr 140px 140px;gap:10px;padding:5px 0 8px;border-bottom:1px solid var(--border2);">
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Artículo</div>
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Costo Proveedor</div>
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">Nuestra Tarifa</div>
+      </div>` +
+      window._articulos.map(a => `
+      <div style="display:grid;grid-template-columns:1fr 140px 140px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:12px;">${esc(a.nombre)}</div>
+          <div style="font-size:10px;color:var(--gold);letter-spacing:0.06em;">${esc(a.codigo)}</div>
+        </div>
+        <div class="input-group">
+          <span class="input-prefix">$</span>
+          <input type="number" id="ag-tarifa-art-${a.id}" placeholder="0.00" step="0.01" min="0"
+            value="${tarifas[a.id] !== undefined ? tarifas[a.id] : ''}"
+            style="padding:7px 8px 7px 24px;font-size:12px;">
+        </div>
+        <div class="input-group">
+          <span class="input-prefix">$</span>
+          <input type="number" id="ag-tarifa-cliente-art-${a.id}" placeholder="0.00" step="0.01" min="0"
+            value="${tarifasCliente[a.id] !== undefined ? tarifasCliente[a.id] : ''}"
+            style="padding:7px 8px 7px 24px;font-size:12px;border-color:rgba(201,168,76,0.3);">
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('modal-agente').classList.add('open');
+  setTimeout(() => document.getElementById('agente-nombre').focus(), 80);
+};
+
+window.guardarAgente = async () => {
+  const nombre = document.getElementById('agente-nombre').value.trim();
+  const paisId = document.getElementById('agente-pais').value;
+  if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
+  if (!paisId) { toast('Seleccioná un país', 'err'); return; }
+
+  const tarifas = {};
+  const tarifasCliente = {};
+  window._articulos.forEach(a => {
+    const el = document.getElementById('ag-tarifa-art-' + a.id);
+    if (el && el.value !== '') tarifas[a.id] = parseFloat(el.value);
+    const elC = document.getElementById('ag-tarifa-cliente-art-' + a.id);
+    if (elC && elC.value !== '') tarifasCliente[a.id] = parseFloat(elC.value);
+  });
+
+  const pais = window._proveedores.find(p => p.id === paisId);
+  const btn = document.getElementById('btn-guardar-agente');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    const docId = window._editingAgente || uid();
+    setSyncState('syncing', 'Guardando...');
+    await setDoc(doc(window._db, 'agentes', docId), {
+      nombre,
+      paisId,
+      paisNombre: pais?.nombre || '',
+      prioridad: parseInt(document.getElementById('agente-prioridad').value) || 99,
+      tarifas,
+      tarifasCliente,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    toast(window._editingAgente ? 'Proveedor actualizado' : 'Proveedor guardado');
+    cerrarModal('modal-agente');
+  } catch(e) {
+    toast('Error al guardar: ' + e.message, 'err');
+    setSyncState('error', 'Error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar';
+  }
+};
+
+window.eliminarAgente = async (id) => {
+  if (!confirm('¿Eliminar este proveedor?')) return;
+  try {
+    setSyncState('syncing', 'Eliminando...');
+    await deleteDoc(doc(window._db, 'agentes', id));
+    toast('Proveedor eliminado');
+  } catch(e) {
+    toast('Error: ' + e.message, 'err');
+  }
+};
+
+function renderAgentes() {
+  const lista = window._agentes;
+  if (!lista.length) {
+    document.getElementById('grid-agentes').innerHTML = `<div class="no-data"><div class="no-data-icon">◉</div><div class="no-data-text">Sin proveedores cargados</div></div>`;
+    return;
+  }
+  // Agrupar por país
+  const porPais = {};
+  lista.forEach(ag => {
+    const key = ag.paisId || 'sin-pais';
+    if (!porPais[key]) porPais[key] = { nombre: ag.paisNombre || 'Sin país', agentes: [] };
+    porPais[key].agentes.push(ag);
+  });
+
+  document.getElementById('grid-agentes').innerHTML = Object.entries(porPais).map(([paisId, grupo]) => `
+    <div style="margin-bottom:24px;">
+      <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">
+        📍 ${esc(grupo.nombre)}
+      </div>
+      <div class="prov-grid">
+        ${grupo.agentes.map(ag => {
+          const nTarifas = Object.keys(ag.tarifas || {}).length;
+          const esFav = ag.prioridad === 1 || ag.prioridad === Math.min(...grupo.agentes.map(a => a.prioridad || 99));
+          return `<div class="prov-card fade-in" style="${esFav ? 'border-color:rgba(201,168,76,0.3);' : ''}">
+            <div class="prov-card-header">
+              <div>
+                <div class="prov-name">${esc(ag.nombre)}</div>
+                <div class="prov-country">${esFav ? '⭐ Favorito' : 'Prioridad ' + (ag.prioridad || '—')}</div>
+              </div>
+              <div style="display:flex;gap:5px;">
+                <button class="btn btn-ghost btn-sm btn-icon" onclick="abrirModalAgente('${ag.id}')">✎</button>
+                <button class="btn btn-danger btn-sm btn-icon" onclick="eliminarAgente('${ag.id}')">✕</button>
+              </div>
+            </div>
+            <div class="prov-detail"><span class="prov-detail-label">Prioridad</span><span class="pill ${esFav ? 'pill-gold' : 'pill-blue'}">${ag.prioridad || '—'}</span></div>
+            <div class="prov-detail"><span class="prov-detail-label">Tarifas</span><span>${nTarifas} / ${window._articulos.length}</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+// COTIZADOR
+// ══════════════════════════════════════════
+window.poblarSelectProv = (selId, conTodos) => {
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  const val = sel.value;
+  sel.innerHTML = (conTodos ? '<option value="">Todos los países</option>' : '<option value="">— Seleccionar país —</option>') +
+    window._proveedores.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('');
+  if (val) sel.value = val;
+};
+
+window.initCotizador = () => {
+  const sel = document.getElementById('cot-articulo');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">— Seleccionar artículo —</option>' +
+    window._articulos.map(a => `<option value="${a.id}">${esc(a.nombre)} [${esc(a.codigo)}]</option>`).join('');
+  if (val) sel.value = val;
+  poblarSelectProv('cot-pais', false);
+  poblarSelectProv('comp-proveedor', true);
+};
+
+window.seleccionarPaisCotizador = () => {
+  const paisId = document.getElementById('cot-pais').value;
+  const selAgente = document.getElementById('cot-proveedor');
+  const grupoAgente = document.getElementById('cot-agente-group');
+
+  // Cargar proveedores del país ordenados por prioridad
+  const agentes = window._agentes.filter(a => a.paisId === paisId).sort((a,b) => (a.prioridad||99)-(b.prioridad||99));
+
+  if (paisId && agentes.length) {
+    selAgente.innerHTML = agentes.map(a =>
+      `<option value="${a.id}">${esc(a.nombre)} (Prioridad ${a.prioridad || '—'})</option>`
+    ).join('');
+    grupoAgente.style.display = 'block';
+    // Seleccionar automáticamente el de mayor prioridad (primero)
+    selAgente.value = agentes[0].id;
+  } else if (paisId && !agentes.length) {
+    selAgente.innerHTML = '<option value="">Sin proveedores para este país</option>';
+    grupoAgente.style.display = 'block';
+  } else {
+    selAgente.innerHTML = '<option value="">— Seleccionar proveedor —</option>';
+    grupoAgente.style.display = 'none';
+  }
+  actualizarCotizador();
+  actualizarNotasPoa();
+};
+
+window.seleccionarArticulo = () => {
+  const id = document.getElementById('cot-articulo').value;
+  const art = window._articulos.find(a => a.id === id);
+  if (art) {
+    document.getElementById('info-articulo').style.display = 'block';
+    document.getElementById('art-id-info').textContent = art.codigo;
+    document.getElementById('art-tasas-info').textContent = art.tasas || '—';
+    document.getElementById('art-monto-info').textContent = art.monto ? fmt(art.monto) : '—';
+    // Solo pre-cargar monto base si no hay agente con tarifa
+    const agenteId = document.getElementById('cot-proveedor').value;
+    const agente = agenteId ? window._agentes.find(a => a.id === agenteId) : null;
+    if (!agente?.tarifasCliente?.[id] && art.monto)
+      document.getElementById('cot-tarifa').value = art.monto;
+  } else {
+    document.getElementById('info-articulo').style.display = 'none';
+  }
+  actualizarCotizador();
+};
+
+window.actualizarCotizador = () => {
+  const agenteId = document.getElementById('cot-proveedor').value;
+  const artId = document.getElementById('cot-articulo').value;
+  const paisId = document.getElementById('cot-pais').value;
+  const pais = window._proveedores.find(p => p.id === paisId);
+  const agente = window._agentes.find(a => a.id === agenteId);
+
+  if (agente && artId) {
+    if (agente.tarifas?.[artId] !== undefined)
+      document.getElementById('cot-costo').value = agente.tarifas[artId];
+    if (agente.tarifasCliente?.[artId] !== undefined)
+      document.getElementById('cot-tarifa').value = agente.tarifasCliente[artId];
+    else
+      document.getElementById('cot-tarifa').value = '';
+  }
+  // Actualizar moneda según el país
+  if (pais?.moneda) {
+    document.getElementById('cot-moneda').value = pais.moneda;
+  }
+  calcularGanancia();
+};
+
+window.calcularGanancia = () => {
+  const costo = parseFloat(document.getElementById('cot-costo').value) || 0;
+  const tarifa = parseFloat(document.getElementById('cot-tarifa').value) || 0;
+  const moneda = document.getElementById('cot-moneda').value;
+  const paisId = document.getElementById('cot-pais').value;
+  const pais = window._proveedores.find(p => p.id === paisId);
+  const agenteId = document.getElementById('cot-proveedor').value;
+  const agente = window._agentes.find(a => a.id === agenteId);
+  const art = window._articulos.find(a => a.id === document.getElementById('cot-articulo').value);
+
+  // Courier y PoA vienen del País
+  const tieneCourier = pais?.courier && pais?.courierTarifa;
+  const courierMonto = tieneCourier ? (pais.courierTarifa || 0) : 0;
+  const tienePoa = pais?.poa && pais?.poaTarifa;
+  const poaMonto = tienePoa ? (pais.poaTarifa || 0) : 0;
+  const totalCliente = tarifa + courierMonto + poaMonto;
+
+  document.getElementById('res-costo').textContent = costo ? fmt(costo, moneda) : '—';
+  document.getElementById('res-tarifa').textContent = tarifa ? fmt(tarifa, moneda) : '—';
+  document.getElementById('res-proveedor').textContent = pais?.nombre || '—';
+  document.getElementById('res-agente').textContent = agente?.nombre || '—';
+  document.getElementById('res-articulo').textContent = art ? art.nombre + ' [' + art.codigo + ']' : '—';
+
+  // Mostrar/ocultar filas courier, PoA y total
+  const hayExtras = (tieneCourier || tienePoa) && tarifa;
+  if (tieneCourier && tarifa) {
+    document.getElementById('res-courier-row').style.display = '';
+    document.getElementById('res-courier').textContent = '+ ' + fmt(courierMonto, moneda);
+  } else {
+    document.getElementById('res-courier-row').style.display = 'none';
+  }
+  if (tienePoa && tarifa) {
+    document.getElementById('res-poa-row').style.display = '';
+    document.getElementById('res-poa').textContent = '+ ' + fmt(poaMonto, moneda);
+  } else {
+    document.getElementById('res-poa-row').style.display = 'none';
+  }
+  if (hayExtras) {
+    document.getElementById('res-total-row').style.display = '';
+    document.getElementById('res-total').textContent = fmt(totalCliente, moneda);
+  } else {
+    document.getElementById('res-total-row').style.display = 'none';
+  }
+
+  if (costo && tarifa) {
+    const dif = totalCliente - costo;
+    const pct = (dif / costo) * 100;
+    document.getElementById('res-diferencia').textContent = fmt(dif, moneda);
+    document.getElementById('res-diferencia').className = 'resultado-value td-mono ' + (dif >= 0 ? 'td-green' : 'td-red');
+    document.getElementById('ganancia-pct').textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    document.getElementById('ganancia-monto').textContent = (dif >= 0 ? '+' : '') + fmt(dif, moneda);
+    document.getElementById('ganancia-display').className = 'ganancia-display' + (dif < 0 ? ' negativa' : '');
+  } else {
+    document.getElementById('res-diferencia').textContent = '—';
+    document.getElementById('res-diferencia').className = 'resultado-value td-mono';
+    document.getElementById('ganancia-pct').textContent = '—';
+    document.getElementById('ganancia-monto').textContent = '';
+    document.getElementById('ganancia-display').className = 'ganancia-display';
+  }
+};
+
+window.limpiarCotizador = () => {
+  ['cot-costo','cot-tarifa','cot-notas'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cot-pais').value = '';
+  document.getElementById('cot-proveedor').value = '';
+  document.getElementById('cot-articulo').value = '';
+  document.getElementById('cot-agente-group').style.display = 'none';
+  document.getElementById('info-articulo').style.display = 'none';
+  calcularGanancia();
+};
+
+window.exportarCotizacion = () => {
+  const moneda = document.getElementById('cot-moneda').value;
+  const costo = parseFloat(document.getElementById('cot-costo').value) || 0;
+  const tarifa = parseFloat(document.getElementById('cot-tarifa').value) || 0;
+  const notas = document.getElementById('cot-notas').value;
+  const _paisId = document.getElementById('cot-pais').value;
+  const prov = window._proveedores.find(p => p.id === _paisId);
+  const agente = window._agentes.find(a => a.id === document.getElementById('cot-proveedor').value);
+  const art = window._articulos.find(a => a.id === document.getElementById('cot-articulo').value);
+  const dif = tarifa - costo;
+  const pct = costo ? ((dif/costo)*100).toFixed(2) : '—';
+  const fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+
+  const tieneCourier = prov?.courier && prov?.courierTarifa;
+  const courierMonto = tieneCourier ? (prov?.courierTarifa || 0) : 0;
+  const tienePoa = prov?.poa && prov?.poaTarifa;
+  const poaMonto = tienePoa ? (prov?.poaTarifa || 0) : 0;
+  const totalCliente = tarifa + courierMonto + poaMonto;
+
+  const txt = [
+    'COTIZACIÓN — PROPIEDAD INTELECTUAL', '═'.repeat(52),
+    'Fecha:              ' + fecha,
+    'País:               ' + (prov ? prov.nombre : '—'),
+    agente ? 'Proveedor:          ' + agente.nombre : '',
+    'Artículo:           ' + (art ? art.nombre + ' ['+art.codigo+']' : '—'),
+    '─'.repeat(52),
+    'Nuestra Tarifa:     ' + fmt(tarifa, moneda),
+    tieneCourier ? 'Courier:            + ' + fmt(courierMonto, moneda) : '',
+    tienePoa ? 'PoA:                + ' + fmt(poaMonto, moneda) : '',
+    tieneCourier ? 'Total:              ' + fmt(totalCliente, moneda) : '',
+    '─'.repeat(52),
+    notas ? 'Notas:\n' + notas + '\n' + '─'.repeat(52) : '',
+  ].filter(Boolean).join('\n');
+
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'cotizacion-' + (art?.codigo||'general') + '-' + Date.now() + '.txt';
+  a.click(); URL.revokeObjectURL(url);
+  toast('Cotización exportada');
+};
+
+// ══════════════════════════════════════════
+// COMPARADOR
+// ══════════════════════════════════════════
+window.renderComparador = () => {
+  const articulos = window._articulos;
+  const agentes = window._agentes;
+  const filtro = document.getElementById('comp-proveedor').value; // filtra por paisId
+  const agentesFilt = filtro ? agentes.filter(a => a.paisId === filtro) : agentes;
+
+  if (!articulos.length || !agentes.length) {
+    document.getElementById('tabla-comparador').innerHTML = `<div class="no-data" style="padding:44px;"><div class="no-data-icon">⊞</div><div class="no-data-text">Cargá artículos y proveedores</div></div>`;
+    return;
+  }
+
+  let rows = '';
+  articulos.forEach(art => {
+    agentesFilt.forEach(ag => {
+      const pais = window._proveedores.find(p => p.id === ag.paisId);
+      const cT = (ag.tarifas && ag.tarifas[art.id] !== undefined) ? ag.tarifas[art.id] : null;
+      const nT = (ag.tarifasCliente && ag.tarifasCliente[art.id] !== undefined) ? ag.tarifasCliente[art.id] : null;
+      if (cT === null && nT === null) return;
+      const dif = (nT !== null && cT !== null) ? nT - cT : null;
+      const pct = (dif !== null && cT) ? (dif/cT)*100 : null;
+      let pc = 'pill-blue', pt = '—';
+      if (pct !== null) { pc = pct>=20?'pill-green':pct>=0?'pill-gold':'pill-red'; pt = (pct>=0?'+':'')+pct.toFixed(1)+'%'; }
+      const moneda = pais?.moneda || 'USD';
+      rows += `<div class="comp-row">
+        <div><div style="font-size:13px;">${esc(art.nombre)}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">${esc(ag.nombre)} · ${esc(ag.paisNombre||'')}</div></div>
+        <div class="td-id td-mono">${esc(art.codigo)}</div>
+        <div class="td-mono">${cT!==null?fmt(cT,moneda):'—'}</div>
+        <div class="td-mono">${nT!==null?fmt(nT,moneda):'—'}</div>
+        <div><span class="pill ${pc}">${pt}</span></div>
+      </div>`;
+    });
+  });
+
+  document.getElementById('tabla-comparador').innerHTML = rows ||
+    `<div class="no-data" style="padding:36px;"><div class="no-data-text">Sin tarifas para comparar</div></div>`;
+};
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.overlay.open').forEach(ov => ov.classList.remove('open'));
+});
+
+// Credenciales cargadas desde servidor tras autenticación PlayFab
+
+// Mostrar login al iniciar
+document.getElementById('login-screen').style.display = 'flex';
+
+['login-user','login-pass'].forEach(function(fid) {
+  document.getElementById(fid).addEventListener('keydown', function(e) { if (e.key==='Enter') doLogin(); });
+});
+
+window.doLogin = async function() {
+  var user = document.getElementById('login-user').value.trim();
+  var pass = document.getElementById('login-pass').value;
+  var errEl = document.getElementById('login-error');
+  var btn = document.getElementById('btn-login');
+  errEl.style.display = 'none';
+  if (!user || !pass) { errEl.textContent = 'Ingresá usuario y contraseña.'; errEl.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  try {
+    var resp = await fetch('https://1B46AD.playfabapi.com/Client/LoginWithEmailAddress', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({TitleId:'1B46AD', Email:user, Password:pass})
+    });
+    var data = await resp.json();
+    if (data.code===200 && data.data && data.data.SessionTicket) {
+      var ticket = data.data.SessionTicket;
+      var playFabId = data.data.PlayFabId;
+
+      // Obtener Player Data directamente desde el cliente
+      var playerDataResp = await fetch('https://1B46AD.playfabapi.com/Client/GetUserData', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json', 'X-Authorization': ticket},
+        body: JSON.stringify({Keys: ['FB_API_KEY','FB_AUTH_DOMAIN','FB_PROJECT_ID','FB_STORAGE_BUCKET','FB_MESSAGING_SENDER_ID','FB_APP_ID']})
+      });
+      var playerData = await playerDataResp.json();
+      var fbKeys = null;
+      if (playerData.code === 200 && playerData.data && playerData.data.Data && playerData.data.Data.FB_PROJECT_ID) {
+        var d = playerData.data.Data;
+        fbKeys = {
+          apiKey:            d.FB_API_KEY             ? d.FB_API_KEY.Value             : null,
+          authDomain:        d.FB_AUTH_DOMAIN         ? d.FB_AUTH_DOMAIN.Value         : null,
+          projectId:         d.FB_PROJECT_ID          ? d.FB_PROJECT_ID.Value          : null,
+          storageBucket:     d.FB_STORAGE_BUCKET      ? d.FB_STORAGE_BUCKET.Value      : null,
+          messagingSenderId: d.FB_MESSAGING_SENDER_ID ? d.FB_MESSAGING_SENDER_ID.Value : null,
+          appId:             d.FB_APP_ID              ? d.FB_APP_ID.Value              : null
+        };
+      }
+
+      var cfgResp = await fetch('/.netlify/functions/config', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({sessionTicket: ticket, playFabId: playFabId, fbKeys: fbKeys})
+      });
+      var cfgText = await cfgResp.text();
+      if (!cfgResp.ok) {
+        errEl.textContent = 'Error ' + cfgResp.status + ': ' + cfgText;
+        errEl.style.display = 'block';
+        btn.disabled=false; btn.textContent='Ingresar →';
+        return;
+      }
+      var cfg;
+      try { cfg = JSON.parse(cfgText); } catch(e) {
+        errEl.textContent = 'Error parsing config: ' + cfgText.substring(0,100);
+        errEl.style.display = 'block';
+        btn.disabled=false; btn.textContent='Ingresar →';
+        return;
+      }
+      // Mostrar qué Firebase se está usando
+      console.log('Firebase projectId:', cfg.projectId);
+      document.getElementById('login-screen').style.display = 'none';
+      iniciarApp(cfg).catch(function(e) { setSyncState('error','Sin conexión: ' + e.message); });
+    } else {
+      errEl.textContent = data.errorMessage || 'Credenciales incorrectas.';
+      errEl.style.display = 'block';
+      btn.disabled=false; btn.textContent='Ingresar →';
+    }
+  } catch(e) {
+    errEl.textContent = 'Error de conexión. Intentá nuevamente.';
+    errEl.style.display = 'block';
+    btn.disabled=false; btn.textContent='Ingresar →';
+  }
+};
+
+window._mSvcs = [];
+function mUID() { return Date.now().toString(36) + Math.random().toString(36).slice(2,4); }
+
+function mPaisOpts() {
+  return '<option value="">— Seleccionar país —</option>' +
+    window._proveedores.map(function(p) {
+      return '<option value="' + p.id + '">' + esc(p.nombre) + '</option>';
+    }).join('');
+}
+function mArtOpts() {
+  return '<option value="">— Seleccionar artículo —</option>' +
+    window._articulos.map(function(a) {
+      return '<option value="' + a.id + '">' + esc(a.nombre) + ' [' + esc(a.codigo) + ']</option>';
+    }).join('');
+}
+function mMonedaOpts(sel) {
+  return ['USD','EUR','ARS','GBP','BRL','MXN'].map(function(m) {
+    return '<option value="' + m + '"' + (sel===m?' selected':'') + '>' + m + '</option>';
+  }).join('');
+}
+
+window.mAgregar = function() {
+  var s = {id:mUID(),paisId:'',agenteId:'',artId:'',costo:0,tarifa:0,moneda:'USD',notas:''};
+  window._mSvcs.push(s);
+  var num = window._mSvcs.length;
+  var q = '&#39;';
+  var div = document.createElement('div');
+  div.id = 'msvc-' + s.id;
+  div.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--radius2);overflow:hidden;margin-bottom:14px;';
+  div.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);">' +
+      '<span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text2);" id="msvc-t-' + s.id + '">Servicio ' + num + '</span>' +
+      '<button class="btn btn-danger btn-sm btn-icon" onclick="mEliminar(' + q + s.id + q + ')">&#10005;</button>' +
+    '</div>' +
+    '<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">' +
+      '<div class="form-group"><label>País</label><select onchange="mOnPais(' + q + s.id + q + ',this.value)">' + mPaisOpts() + '</select></div>' +
+      '<div class="form-group" id="mag-grp-' + s.id + '" style="display:none;"><label>Proveedor</label><select id="mag-' + s.id + '" onchange="mOnAgente(' + q + s.id + q + ',this.value)"><option value="">—</option></select></div>' +
+      '<div class="form-group"><label>Artículo / Tipo de Trabajo</label><select onchange="mOnArt(' + q + s.id + q + ',this.value)">' + mArtOpts() + '</select></div>' +
+      '<div class="form-grid">' +
+        '<div class="form-group"><label>Costo País</label><div class="input-group"><span class="input-prefix">$</span><input type="number" id="mcosto-' + s.id + '" placeholder="0.00" step="0.01" min="0" oninput="mOnInput(' + q + s.id + q + ')"></div></div>' +
+        '<div class="form-group"><label>Nuestra Tarifa</label><div class="input-group"><span class="input-prefix">$</span><input type="number" id="mtarifa-' + s.id + '" placeholder="0.00" step="0.01" min="0" oninput="mOnInput(' + q + s.id + q + ')"></div></div>' +
+      '</div>' +
+      '<div class="form-group"><label>Moneda</label><select id="mmoneda-' + s.id + '" onchange="mOnInput(' + q + s.id + q + ')">' + mMonedaOpts('USD') + '</select></div>' +
+      '<div class="form-group"><label>Notas del Servicio</label><textarea id="mnotas-' + s.id + '" placeholder="Descripción, condiciones..." oninput="mOnInput(' + q + s.id + q + ')"></textarea></div>' +
+    '</div>';
+  document.getElementById('m-svcs-col').appendChild(div);
+  mRecalc();
+};
+
+window.mAgregarVinculado = function(linkedTo, pais, art) {
+  var sMain = window._mSvcs.find(function(x){ return x.id===linkedTo; });
+  var moneda = (pais && pais.moneda) || 'USD';
+  var agenteId = sMain ? sMain.agenteId : '';
+  // Tarifas del proveedor si las tiene
+  var costo = 0, tarifa = 0;
+  if (agenteId) {
+    var ag = window._agentes.find(function(a){ return a.id===agenteId; });
+    if (ag) {
+      if (ag.tarifas && ag.tarifas[art.id] !== undefined) costo = ag.tarifas[art.id];
+      if (ag.tarifasCliente && ag.tarifasCliente[art.id] !== undefined) tarifa = ag.tarifasCliente[art.id];
+    }
+  }
+  var s = {id:mUID(), paisId: pais ? pais.id : '', agenteId:agenteId, artId:art.id, costo:costo, tarifa:tarifa, moneda:moneda, notas:'', linkedTo:linkedTo, esExtra:true, tipoExtra:'vinculado'};
+  window._mSvcs.push(s);
+  // Insertar después del último bloque vinculado a este padre
+  var todos = window._mSvcs.filter(function(x){ return x.linkedTo===linkedTo && x.id!==s.id; });
+  var refEl = todos.length ? document.getElementById('msvc-'+todos[todos.length-1].id) : document.getElementById('msvc-'+linkedTo);
+  var div = document.createElement('div');
+  div.id = 'msvc-'+s.id;
+  div.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:var(--radius2);overflow:hidden;margin-bottom:14px;opacity:0.9;';
+  var paisNombre = pais ? esc(pais.nombre) : '—';
+  var artNombre  = esc(art.nombre);
+  div.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);">' +
+      '<span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);">&#11835; ' + artNombre + ' — ' + paisNombre + '</span>' +
+      '<button class="btn btn-danger btn-sm btn-icon" onclick="mEliminar(&#39;' + s.id + '&#39;)">&#10005;</button>' +
+    '</div>' +
+    '<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">' +
+      '<div class="form-grid">' +
+        '<div class="form-group"><label>País (bloqueado)</label><input type="text" value="' + paisNombre + '" disabled style="opacity:0.6;cursor:not-allowed;"></div>' +
+        '<div class="form-group"><label>Artículo (bloqueado)</label><input type="text" value="' + artNombre + ' [' + esc(art.codigo) + ']" disabled style="opacity:0.6;cursor:not-allowed;"></div>' +
+      '</div>' +
+      '<div class="form-grid">' +
+        '<div class="form-group"><label>Costo País</label><div class="input-group"><span class="input-prefix">$</span>' +
+          '<input type="number" id="mcosto-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="' + costo + '" oninput="mOnInput(&#39;' + s.id + '&#39;)"></div></div>' +
+        '<div class="form-group"><label>Nuestra Tarifa</label><div class="input-group"><span class="input-prefix">$</span>' +
+          '<input type="number" id="mtarifa-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="' + tarifa + '" oninput="mOnInput(&#39;' + s.id + '&#39;)"></div></div>' +
+      '</div>' +
+      '<div class="form-group"><label>Moneda</label>' +
+        '<select id="mmoneda-' + s.id + '" onchange="mOnInput(&#39;' + s.id + '&#39;)">' + mMonedaOpts(moneda) + '</select>' +
+      '</div>' +
+    '</div>';
+  if (refEl && refEl.nextSibling) {
+    refEl.parentNode.insertBefore(div, refEl.nextSibling);
+  } else if (refEl) {
+    refEl.parentNode.appendChild(div);
+  } else {
+    document.getElementById('m-svcs-col').appendChild(div);
+  }
+};
+
+window.mEliminar = function(id) {
+  var svc = window._mSvcs.find(function(s){ return s.id===id; });
+  // Si es extra, simplemente eliminar
+  if (svc && svc.esExtra) {
+    window._mSvcs = window._mSvcs.filter(function(s){ return s.id !== id; });
+    var el = document.getElementById('msvc-'+id); if (el) el.remove();
+    mRecalc(); return;
+  }
+  // Si es principal, verificar que quede al menos 1 principal
+  var principales = window._mSvcs.filter(function(s){ return !s.esExtra; });
+  if (principales.length <= 1) { toast('Debe haber al menos un servicio','err'); return; }
+  // Eliminar extras vinculados
+  window._mSvcs.filter(function(s){ return s.linkedTo===id; }).forEach(function(s){
+    var el = document.getElementById('msvc-'+s.id); if (el) el.remove();
+  });
+  window._mSvcs = window._mSvcs.filter(function(s){ return s.id!==id && s.linkedTo!==id; });
+  var el = document.getElementById('msvc-'+id); if (el) el.remove();
+  // Re-numerar solo los principales
+  var num=1;
+  window._mSvcs.filter(function(s){ return !s.esExtra; }).forEach(function(s){
+    var t = document.getElementById('msvc-t-'+s.id); if (t) t.textContent='Servicio '+(num++);
+  });
+  mRecalc();
+};
+
+window.mOnPais = function(id, paisId) {
+  var s = window._mSvcs.find(function(x){ return x.id===id; });
+  s.paisId = paisId;
+  var pais = window._proveedores.find(function(p){ return p.id===paisId; });
+  var ags = window._agentes.filter(function(a){ return a.paisId===paisId; })
+    .sort(function(a,b){ return (a.prioridad||99)-(b.prioridad||99); });
+  var selAg = document.getElementById('mag-' + id);
+  var grpAg = document.getElementById('mag-grp-' + id);
+  var q = '&#39;';
+  if (paisId && ags.length) {
+    selAg.innerHTML = ags.map(function(a){ return '<option value="' + a.id + '">' + esc(a.nombre) + ' (P' + (a.prioridad||'-') + ')</option>'; }).join('');
+    grpAg.style.display = 'block';
+    selAg.value = ags[0].id;
+    s.agenteId = ags[0].id;
+  } else if (paisId) {
+    selAg.innerHTML = '<option value="">Sin proveedores</option>';
+    grpAg.style.display = 'block';
+    s.agenteId = '';
+  } else {
+    grpAg.style.display = 'none';
+    s.agenteId = '';
+  }
+  if (pais && pais.moneda) { document.getElementById('mmoneda-'+id).value = pais.moneda; s.moneda = pais.moneda; }
+  mAplicarNotas(id, pais);
+  mCargarTarifas(id);
+  // Agregar bloques automáticos de Courier y PoA si corresponde
+  mSyncExtras(id, pais);
+  mRecalc();
+};
+
+window.mSyncExtras = function(id, pais) {
+  // Eliminar solo extras de tipo 'courier_poa' (no vinculados de artículo)
+  window._mSvcs.filter(function(s){ return s.linkedTo === id && s.tipoExtra !== 'vinculado'; }).forEach(function(s){
+    var el = document.getElementById('msvc-'+s.id);
+    if (el) el.remove();
+    window._mSvcs = window._mSvcs.filter(function(x){ return x.id !== s.id; });
+  });
+  if (!pais) return;
+  // Buscar artículos por nombre exacto
+  var artCourier = window._articulos.find(function(a){ return a.nombre === 'Courier'; });
+  var artPoa     = window._articulos.find(function(a){ return a.nombre === 'PoA'; });
+  if (pais.courier && pais.courierTarifa && artCourier) {
+    mAgregarExtra(id, pais, artCourier, pais.courierTarifa);
+  }
+  if (pais.poa && pais.poaTarifa && artPoa) {
+    mAgregarExtra(id, pais, artPoa, pais.poaTarifa);
+  }
+};
+
+window.mAgregarExtra = function(linkedTo, pais, art, tarifa) {
+  var sMain = window._mSvcs.find(function(x){ return x.id===linkedTo; });
+  var moneda = pais.moneda || 'USD';
+  var s = {id:mUID(), paisId:pais.id, agenteId: sMain ? sMain.agenteId : '', artId:art.id, costo:0, tarifa:tarifa, moneda:moneda, notas:'', linkedTo:linkedTo, esExtra:true, tipoExtra:'courier_poa'};
+  window._mSvcs.push(s);
+  // Insertar después del bloque principal (o del último extra del mismo padre)
+  var refEl = document.getElementById('msvc-'+linkedTo);
+  // Encontrar el último bloque vinculado a este padre
+  var hermanos = window._mSvcs.filter(function(x){ return x.linkedTo===linkedTo && x.id!==s.id; });
+  if (hermanos.length) {
+    var lastHermano = document.getElementById('msvc-'+hermanos[hermanos.length-1].id);
+    if (lastHermano) refEl = lastHermano;
+  }
+  var div = document.createElement('div');
+  div.id = 'msvc-'+s.id;
+  div.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--radius2);overflow:hidden;margin-bottom:14px;opacity:0.9;';
+  var paisNombre = esc(pais.nombre);
+  var artNombre  = esc(art.nombre);
+  div.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);">' +
+      '<span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">&#11835; ' + artNombre + ' — ' + paisNombre + '</span>' +
+      '<button class="btn btn-danger btn-sm btn-icon" onclick="mEliminar(&#39;' + s.id + '&#39;)">&#10005;</button>' +
+    '</div>' +
+    '<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">' +
+      '<div class="form-grid">' +
+        '<div class="form-group"><label>País (bloqueado)</label>' +
+          '<input type="text" value="' + paisNombre + '" disabled style="opacity:0.6;cursor:not-allowed;"></div>' +
+        '<div class="form-group"><label>Artículo</label>' +
+          '<input type="text" value="' + artNombre + '" disabled style="opacity:0.6;cursor:not-allowed;"></div>' +
+      '</div>' +
+      '<div class="form-grid">' +
+        '<div class="form-group"><label>Costo País</label><div class="input-group"><span class="input-prefix">$</span>' +
+          '<input type="number" id="mcosto-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="0" oninput="mOnInput(&#39;' + s.id + '&#39;)"></div></div>' +
+        '<div class="form-group"><label>Nuestra Tarifa</label><div class="input-group"><span class="input-prefix">$</span>' +
+          '<input type="number" id="mtarifa-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="' + tarifa + '" oninput="mOnInput(&#39;' + s.id + '&#39;)"></div></div>' +
+      '</div>' +
+      '<div class="form-group"><label>Moneda</label>' +
+        '<select id="mmoneda-' + s.id + '" onchange="mOnInput(&#39;' + s.id + '&#39;)">' + mMonedaOpts(moneda) + '</select>' +
+      '</div>' +
+    '</div>';
+  if (refEl && refEl.nextSibling) {
+    refEl.parentNode.insertBefore(div, refEl.nextSibling);
+  } else if (refEl) {
+    refEl.parentNode.appendChild(div);
+  } else {
+    document.getElementById('m-svcs-col').appendChild(div);
+  }
+};
+
+window.mOnAgente = function(id, agenteId) {
+  var s = window._mSvcs.find(function(x){ return x.id===id; });
+  s.agenteId = agenteId;
+  mCargarTarifas(id);
+  mRecalc();
+};
+
+window.mOnArt = function(id, artId) {
+  var s = window._mSvcs.find(function(x){ return x.id===id; });
+  // Eliminar bloques vinculados previos de este servicio (solo tipo 'vinculado')
+  window._mSvcs.filter(function(x){ return x.linkedTo===id && x.tipoExtra==='vinculado'; }).forEach(function(x){
+    var el = document.getElementById('msvc-'+x.id); if (el) el.remove();
+  });
+  window._mSvcs = window._mSvcs.filter(function(x){ return !(x.linkedTo===id && x.tipoExtra==='vinculado'); });
+  s.artId = artId;
+  mCargarTarifas(id);
+  // Agregar artículos vinculados si el artículo los tiene
+  if (artId) {
+    var art = window._articulos.find(function(a){ return a.id===artId; });
+    if (art && art.vinculados) {
+      var codigos = art.vinculados.split(',').map(function(v){ return v.trim(); }).filter(Boolean);
+      var pais = window._proveedores.find(function(p){ return p.id===s.paisId; });
+      codigos.forEach(function(cod) {
+        var artVinc = window._articulos.find(function(a){ return a.codigo === cod; });
+        if (artVinc) mAgregarVinculado(id, pais, artVinc);
+      });
+    }
+  }
+  mRecalc();
+};
+
+window.mOnInput = function(id) {
+  var s = window._mSvcs.find(function(x){ return x.id===id; });
+  s.costo  = parseFloat(document.getElementById('mcosto-'+id).value)||0;
+  s.tarifa = parseFloat(document.getElementById('mtarifa-'+id).value)||0;
+  s.moneda = document.getElementById('mmoneda-'+id).value;
+  s.notas  = document.getElementById('mnotas-'+id).value;
+  mRecalc();
+};
+
+function mCargarTarifas(id) {
+  var s = window._mSvcs.find(function(x){ return x.id===id; });
+  var ag = window._agentes.find(function(a){ return a.id===s.agenteId; });
+  var art = window._articulos.find(function(a){ return a.id===s.artId; });
+  if (ag && s.artId) {
+    if (ag.tarifas && ag.tarifas[s.artId] !== undefined) { document.getElementById('mcosto-'+id).value = ag.tarifas[s.artId]; s.costo = ag.tarifas[s.artId]; }
+    if (ag.tarifasCliente && ag.tarifasCliente[s.artId] !== undefined) { document.getElementById('mtarifa-'+id).value = ag.tarifasCliente[s.artId]; s.tarifa = ag.tarifasCliente[s.artId]; }
+    else if (art && art.monto) { document.getElementById('mtarifa-'+id).value = art.monto; s.tarifa = art.monto; }
+  }
+}
+
+var M_POA = 'An original Power of Attorney duly apostilled is required.';
+function mAplicarNotas(id, pais) {
+  var el = document.getElementById('mnotas-'+id);
+  var txt = el.value;
+  txt = txt.split('\n'+M_POA).join('').split(M_POA).join('');
+  window._proveedores.forEach(function(p){ if (p.requerimientos) { txt = txt.split('\n'+p.requerimientos).join('').split(p.requerimientos).join(''); } });
+  txt = txt.trim();
+  var extras = [];
+  if (pais && pais.poa) extras.push(M_POA);
+  if (pais && pais.requerimientos) extras.push(pais.requerimientos);
+  el.value = extras.length ? (txt ? txt+'\n'+extras.join('\n') : extras.join('\n')) : txt;
+  var s = window._mSvcs.find(function(x){ return x.id===id; });
+  if (s) s.notas = el.value;
+}
+
+function mRecalc() {
+  var totalG=0, costoG=0, monedaG='USD';
+  var totalCourier=0, totalPoa=0, subtotal=0, paisesCount=0;
+  window._mSvcs.forEach(function(s) {
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var m=s.moneda||'USD';
+    if (pais) monedaG=m;
+    if (s.tarifa) {
+      if (s.esExtra) {
+        // Detectar si es Courier o PoA por nombre de artículo
+        var art=window._articulos.find(function(a){ return a.id===s.artId; });
+        if (art && art.nombre==='Courier') totalCourier+=s.tarifa;
+        else if (art && art.nombre==='PoA') totalPoa+=s.tarifa;
+      } else {
+        paisesCount++; subtotal+=s.tarifa;
+      }
+    }
+    totalG+=s.tarifa; costoG+=s.costo;
+  });
+  // Actualizar panel
+  document.getElementById('m-res-paises').textContent = paisesCount > 0 ? paisesCount + (paisesCount===1?' país':' países') : '—';
+  document.getElementById('m-res-subtotal').textContent = subtotal > 0 ? fmt(subtotal, monedaG) : '—';
+  if (totalCourier > 0) {
+    document.getElementById('m-res-courier-row').style.display = '';
+    document.getElementById('m-res-courier').textContent = '+ ' + fmt(totalCourier, monedaG);
+  } else { document.getElementById('m-res-courier-row').style.display = 'none'; }
+  if (totalPoa > 0) {
+    document.getElementById('m-res-poa-row').style.display = '';
+    document.getElementById('m-res-poa').textContent = '+ ' + fmt(totalPoa, monedaG);
+  } else { document.getElementById('m-res-poa-row').style.display = 'none'; }
+  document.getElementById('m-total-valor').textContent = totalG > 0 ? fmt(totalG, monedaG) : '—';
+  // Margen
+  var pctEl=document.getElementById('m-ganancia-pct'), montoEl=document.getElementById('m-ganancia-monto'), gd=document.getElementById('m-ganancia-display');
+  if (costoG>0&&totalG>0) {
+    var dif=totalG-costoG, pct=(dif/costoG)*100;
+    pctEl.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+    montoEl.textContent=(dif>=0?'+':'')+fmt(dif,monedaG);
+    gd.className='ganancia-display'+(dif<0?' negativa':'');
+  } else { pctEl.textContent='—'; montoEl.textContent=''; gd.className='ganancia-display'; }
+}
+
+window.mLimpiar = function() {
+  if (!confirm('Limpiar todos los servicios?')) return;
+  window._mSvcs=[];
+  document.getElementById('m-svcs-col').innerHTML='';
+  mRecalc(); mAgregar();
+};
+
+window.mExportar = function() {
+  var validos = window._mSvcs.filter(function(s){ return s.paisId && s.tarifa; });
+  if (!validos.length) { toast('Completá al menos un servicio con país y tarifa','err'); return; }
+
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W = 210, pad = 18, y = 0;
+
+  // Colores
+  var BG       = '#0e0f0d';
+  var SURFACE  = '#161714';
+  var GOLD     = '#c9a84c';
+  var TEXT     = '#e8e6df';
+  var MUTED    = '#9a9890';
+  var DIM      = '#5c5c57';
+  var BORDER   = '#2e2f2a';
+  var GREEN    = '#6dbb8a';
+
+  function hexToRgb(hex) {
+    var r = parseInt(hex.slice(1,3),16);
+    var g = parseInt(hex.slice(3,5),16);
+    var b = parseInt(hex.slice(5,7),16);
+    return [r,g,b];
+  }
+  function setFill(hex) { var rgb=hexToRgb(hex); doc.setFillColor(rgb[0],rgb[1],rgb[2]); }
+  function setTextColor(hex) { var rgb=hexToRgb(hex); doc.setTextColor(rgb[0],rgb[1],rgb[2]); }
+  function setDrawColor(hex) { var rgb=hexToRgb(hex); doc.setDrawColor(rgb[0],rgb[1],rgb[2]); }
+
+  // Fondo completo
+  setFill(BG);
+  doc.rect(0,0,W,297,'F');
+
+  // Header
+  setFill(SURFACE);
+  doc.rect(0,0,W,36,'F');
+  setFill(GOLD);
+  doc.rect(0,35.5,W,0.8,'F');
+
+  // LexQuote
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(20);
+  setTextColor(GOLD);
+  doc.text('LexQuote', pad, 16);
+
+  // Subtítulo
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  setTextColor(DIM);
+  doc.text('COTIZADOR', pad, 22);
+
+  // Número cotización y fecha
+  var fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum = 'COT-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  setTextColor(GOLD);
+  doc.text(cotNum, W-pad, 14, {align:'right'});
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  setTextColor(MUTED);
+  doc.text(fecha, W-pad, 20, {align:'right'});
+  doc.setFontSize(7);
+  setTextColor(DIM);
+  doc.text('FECHA', W-pad, 25, {align:'right'});
+
+  y = 44;
+
+  // Título sección
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  setTextColor(DIM);
+  doc.text('SERVICIOS COTIZADOS', pad, y);
+  setFill(BORDER);
+  doc.rect(pad, y+1.5, W-pad*2, 0.3, 'F');
+  y += 7;
+
+  var totalG = 0, monedaG = 'USD';
+  var allNotas = [];
+
+  validos.forEach(function(s, idx) {
+    var pais = window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art  = window._articulos.find(function(a){ return a.id===s.artId; });
+    var m = s.moneda || 'USD'; monedaG = m;
+    var tC = pais&&pais.courier&&pais.courierTarifa, mC = tC?pais.courierTarifa:0;
+    var tP = pais&&pais.poa&&pais.poaTarifa,         mP = tP?pais.poaTarifa:0;
+    var tot = s.tarifa + mC + mP;
+    totalG += tot;
+    if (s.notas) allNotas.push(s.notas);
+
+    // Nombre del país
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    setTextColor(GOLD);
+    doc.text(pais ? pais.nombre : '—', pad, y);
+    y += 5;
+
+    // Artículo principal
+    var artNombre = art ? art.nombre : 'Servicio';
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    setTextColor(MUTED);
+    doc.text(artNombre, pad+2, y);
+    setTextColor(TEXT);
+    doc.text(fmt(s.tarifa, m), W-pad, y, {align:'right'});
+    setFill(BORDER);
+    doc.rect(pad+2, y+1.5, W-pad*2-2, 0.2, 'F');
+    y += 6;
+
+    // Extras vinculados (otros servicios del mismo país que son esExtra)
+    var vinculados = window._mSvcs.filter(function(x){ return x.linkedTo===s.id && x.tipoExtra==='vinculado' && x.tarifa; });
+    vinculados.forEach(function(v) {
+      var artV = window._articulos.find(function(a){ return a.id===v.artId; });
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      setTextColor(MUTED);
+      doc.text(artV ? artV.nombre : 'Artículo vinculado', pad+2, y);
+      setTextColor(TEXT);
+      doc.text(fmt(v.tarifa, m), W-pad, y, {align:'right'});
+      setFill(BORDER);
+      doc.rect(pad+2, y+1.5, W-pad*2-2, 0.2, 'F');
+      totalG += v.tarifa;
+      y += 6;
+    });
+
+    // Courier
+    if (tC) {
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      setTextColor(MUTED);
+      doc.text('Courier', pad+2, y);
+      // Badge extra
+      setFill('#1a3a2a');
+      doc.roundedRect(pad+22, y-3.5, 10, 4, 1, 1, 'F');
+      doc.setFontSize(6);
+      setTextColor(GREEN);
+      doc.text('EXTRA', pad+24, y-0.8);
+      doc.setFontSize(9);
+      setTextColor(GREEN);
+      doc.text('+ ' + fmt(mC, m), W-pad, y, {align:'right'});
+      setFill(BORDER);
+      doc.rect(pad+2, y+1.5, W-pad*2-2, 0.2, 'F');
+      y += 6;
+    }
+
+    // PoA
+    if (tP) {
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      setTextColor(MUTED);
+      doc.text('Power of Attorney (PoA)', pad+2, y);
+      setFill('#1a3a2a');
+      doc.roundedRect(pad+47, y-3.5, 10, 4, 1, 1, 'F');
+      doc.setFontSize(6);
+      setTextColor(GREEN);
+      doc.text('EXTRA', pad+49, y-0.8);
+      doc.setFontSize(9);
+      setTextColor(GREEN);
+      doc.text('+ ' + fmt(mP, m), W-pad, y, {align:'right'});
+      setFill(BORDER);
+      doc.rect(pad+2, y+1.5, W-pad*2-2, 0.2, 'F');
+      y += 6;
+    }
+
+    // Divisor entre países
+    if (idx < validos.length - 1) {
+      setFill(BORDER);
+      doc.rect(pad, y+1, W-pad*2, 0.5, 'F');
+      y += 8;
+    }
+  });
+
+  y += 6;
+
+  // Notas
+  var notasUnicas = allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if (notasUnicas.length) {
+    setFill('#161714');
+    doc.rect(pad, y, W-pad*2, 2, 'F');
+    setFill(GOLD);
+    doc.rect(pad, y, 0.8, 0, 'F');
+
+    var notasTxt = notasUnicas.join(' ');
+    var lines = doc.splitTextToSize(notasTxt, W-pad*2-12);
+    var notasH = lines.length * 4.5 + 10;
+    setFill(SURFACE);
+    doc.rect(pad, y, W-pad*2, notasH, 'F');
+    setFill(GOLD);
+    doc.rect(pad, y, 0.8, notasH, 'F');
+
+    doc.setFontSize(7);
+    setTextColor(DIM);
+    doc.text('NOTAS', pad+4, y+5);
+    doc.setFontSize(8);
+    setTextColor(MUTED);
+    doc.text(lines, pad+4, y+10);
+    y += notasH + 6;
+  }
+
+  // Total general
+  setFill(SURFACE);
+  doc.rect(pad, y, W-pad*2, 18, 'F');
+  setDrawColor(BORDER);
+  doc.setLineWidth(0.3);
+  doc.rect(pad, y, W-pad*2, 18);
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  setTextColor(DIM);
+  doc.text('TOTAL GENERAL', pad+6, y+7);
+  doc.setFontSize(8);
+  setTextColor(DIM);
+  doc.text(validos.length + ' país/es · ' + validos.length + ' servicios', pad+6, y+13);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  setTextColor(GOLD);
+  doc.text(fmt(totalG, monedaG), W-pad-4, y+12, {align:'right'});
+
+  y += 24;
+
+  // Footer
+  setFill(BORDER);
+  doc.rect(0, 282, W, 0.3, 'F');
+  setFill(SURFACE);
+  doc.rect(0, 282.3, W, 15, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
+  setTextColor(GOLD);
+  doc.text('LexQuote', pad, 290);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  setTextColor(DIM);
+  doc.text('Este documento es una cotización y no constituye una factura.', W-pad, 290, {align:'right'});
+
+  doc.save('LexQuote-Cotizacion-' + Date.now() + '.pdf');
+  toast('PDF generado correctamente');
+};
+
+window.showSection = (function(orig) {
+  return function(id, btn) {
+    orig(id, btn);
+    if (id==='multi' && window._mSvcs.length===0) mAgregar();
+  };
+})(window.showSection);
+
+// ══════════════════════════════════════════
+// IMPORTAR DESDE GOOGLE SHEETS
+// ══════════════════════════════════════════
+
+window._impData = null; // datos validados listos para escribir
+var _impStep = 1;
+
+window.abrirModalImportar = function() {
+  _impStep = 1;
+  window._impData = null;
+  document.getElementById('imp-url').value = '';
+  document.getElementById('imp-warn-1').style.display = 'none';
+  document.getElementById('imp-warn-2').style.display = 'none';
+  document.getElementById('imp-validation').innerHTML = '';
+  impMostrarStep(1);
+  document.getElementById('modal-importar').classList.add('open');
+  setTimeout(function(){ document.getElementById('imp-url').focus(); }, 100);
+};
+
+function impMostrarStep(n) {
+  _impStep = n;
+  [1,2,3,4].forEach(function(i){
+    document.getElementById('imp-step-'+i).classList.toggle('active', i===n);
+  });
+  var btnNext = document.getElementById('imp-btn-next');
+  var btnCancel = document.getElementById('imp-btn-cancel');
+  btnCancel.style.display = '';
+  if (n===1) { btnNext.textContent = 'Verificar datos →'; btnNext.disabled = false; }
+  if (n===2) { btnNext.textContent = 'Importar a Firebase →'; btnNext.disabled = false; }
+  if (n===3) { btnNext.style.display = 'none'; btnCancel.style.display = 'none'; }
+  if (n===4) { btnNext.textContent = 'Cerrar'; btnNext.onclick = function(){ cerrarModal('modal-importar'); }; btnNext.disabled = false; btnCancel.style.display = 'none'; }
+  if (n!==4) btnNext.onclick = impNextStep;
+}
+
+window.impNextStep = async function() {
+  if (_impStep === 1) { await impVerificar(); }
+  else if (_impStep === 2) { await impEjecutar(); }
+};
+
+// Extraer el Sheet ID de cualquier formato de URL de Google Sheets
+function extraerSheetId(url) {
+  var m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+// Fetch de una hoja como CSV usando la API pública de Google Sheets
+async function fetchHoja(sheetId, nombreHoja) {
+  var url = 'https://docs.google.com/spreadsheets/d/' + sheetId +
+    '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent(nombreHoja);
+  var resp = await fetch(url);
+  if (!resp.ok) throw new Error('No se pudo leer la hoja "' + nombreHoja + '" (HTTP ' + resp.status + ')');
+  var text = await resp.text();
+  // Verificar que no sea error de Google (a veces retorna HTML con 200)
+  if (text.trim().startsWith('<!')) throw new Error('La hoja "' + nombreHoja + '" no existe o el Sheet no es público');
+  return parsearCSV(text);
+}
+
+// Parser CSV robusto (maneja comillas, comas dentro de campos, etc.)
+function parsearCSV(texto) {
+  var lineas = [];
+  var actual = [];
+  var campo = '';
+  var enComillas = false;
+  var i = 0;
+  while (i < texto.length) {
+    var c = texto[i];
+    if (c === '"') {
+      if (enComillas && texto[i+1] === '"') { campo += '"'; i += 2; continue; }
+      enComillas = !enComillas;
+    } else if (c === ',' && !enComillas) {
+      actual.push(campo.trim()); campo = '';
+    } else if ((c === '\n' || c === '\r') && !enComillas) {
+      if (c === '\r' && texto[i+1] === '\n') i++;
+      actual.push(campo.trim()); campo = '';
+      if (actual.some(function(x){ return x !== ''; })) lineas.push(actual);
+      actual = [];
+    } else {
+      campo += c;
+    }
+    i++;
+  }
+  if (campo !== '' || actual.length) { actual.push(campo.trim()); if (actual.some(function(x){ return x !== ''; })) lineas.push(actual); }
+  if (!lineas.length) return [];
+  // Convertir a array de objetos usando primera fila como headers
+  var headers = lineas[0].map(function(h){ return h.toLowerCase().replace(/\s+/g,'_'); });
+  return lineas.slice(1).map(function(fila) {
+    var obj = {};
+    headers.forEach(function(h, idx){ obj[h] = fila[idx] !== undefined ? fila[idx] : ''; });
+    return obj;
+  });
+}
+
+function impValRow(tipo, msg) {
+  var cls = tipo==='ok'?'import-val-ok':tipo==='warn'?'import-val-warn':'import-val-err';
+  var icon = tipo==='ok'?'✓':tipo==='warn'?'⚠':'✕';
+  return '<div class="import-val-row '+cls+'"><span>'+icon+'</span><span>'+esc(msg)+'</span></div>';
+}
+
+async function impVerificar() {
+  var btn = document.getElementById('imp-btn-next');
+  var warnEl = document.getElementById('imp-warn-1');
+  warnEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Verificando...';
+
+  var url = document.getElementById('imp-url').value.trim();
+  if (!url) { warnEl.textContent = 'Ingresá la URL del Sheet.'; warnEl.style.display='block'; btn.disabled=false; btn.textContent='Verificar datos →'; return; }
+  var sheetId = extraerSheetId(url);
+  if (!sheetId) { warnEl.textContent = 'URL inválida. Debe ser una URL de Google Sheets.'; warnEl.style.display='block'; btn.disabled=false; btn.textContent='Verificar datos →'; return; }
+
+  try {
+    // Leer las 4 hojas
+    var rawArt     = await fetchHoja(sheetId, 'articulos');
+    var rawPaises  = await fetchHoja(sheetId, 'paises');
+    var rawAgentes = await fetchHoja(sheetId, 'agentes');
+    var rawTarifas = await fetchHoja(sheetId, 'tarifas');
+
+    var validaciones = [];
+    var errores = 0;
+
+    // ── Validar artículos ──
+    var artMap = {}; // codigo → uid generado
+    var artValidos = [];
+    rawArt.forEach(function(r, i) {
+      var fila = i+2;
+      if (!r.codigo) { validaciones.push(impValRow('err', 'Artículos fila '+fila+': falta "codigo"')); errores++; return; }
+      if (!r.nombre) { validaciones.push(impValRow('err', 'Artículos fila '+fila+': falta "nombre"')); errores++; return; }
+      if (artMap[r.codigo]) { validaciones.push(impValRow('warn', 'Artículos: código "'+r.codigo+'" duplicado, se usará el primero')); return; }
+      var id = uid();
+      artMap[r.codigo] = id;
+      artValidos.push({ id:id, codigo:r.codigo, nombre:r.nombre,
+        monto: parseFloat(r.monto)||0, tasas:r.tasas||'',
+        vinculados:r.vinculados||'', desc:r.desc||'' });
+    });
+    validaciones.push(impValRow('ok', artValidos.length + ' artículos válidos'));
+
+    // ── Validar países ──
+    var paisMap = {}; // nombre → uid
+    var paisValidos = [];
+    var monedasOk = ['USD','EUR','ARS','GBP','BRL','MXN','CLP','COP'];
+    rawPaises.forEach(function(r, i) {
+      var fila = i+2;
+      if (!r.nombre) { validaciones.push(impValRow('err', 'Países fila '+fila+': falta "nombre"')); errores++; return; }
+      if (paisMap[r.nombre]) { validaciones.push(impValRow('warn', 'Países: "'+r.nombre+'" duplicado, se usará el primero')); return; }
+      var moneda = (r.moneda||'USD').toUpperCase();
+      if (!monedasOk.includes(moneda)) { validaciones.push(impValRow('warn', 'Países "'+r.nombre+'": moneda "'+moneda+'" no reconocida, usando USD')); moneda='USD'; }
+      var courier = r.courier && (r.courier.toUpperCase()==='TRUE'||r.courier==='1');
+      var poa     = r.poa     && (r.poa.toUpperCase()==='TRUE'    ||r.poa==='1');
+      var id = uid();
+      paisMap[r.nombre] = id;
+      paisValidos.push({ id:id, nombre:r.nombre, moneda:moneda,
+        courier:courier, courierTarifa:parseFloat(r.courier_tarifa)||0,
+        poa:poa, poaTarifa:parseFloat(r.poa_tarifa)||0,
+        requerimientos:r.requerimientos||'' });
+    });
+    validaciones.push(impValRow('ok', paisValidos.length + ' países válidos'));
+
+    // ── Validar agentes ──
+    var agenteMap = {}; // "nombre|pais" → uid
+    var agenteValidos = [];
+    rawAgentes.forEach(function(r, i) {
+      var fila = i+2;
+      if (!r.nombre) { validaciones.push(impValRow('err', 'Agentes fila '+fila+': falta "nombre"')); errores++; return; }
+      if (!r.pais)   { validaciones.push(impValRow('err', 'Agentes fila '+fila+' ("'+r.nombre+'"): falta "pais"')); errores++; return; }
+      if (!paisMap[r.pais]) { validaciones.push(impValRow('err', 'Agentes "'+r.nombre+'": país "'+r.pais+'" no existe en hoja paises')); errores++; return; }
+      var clave = r.nombre+'|'+r.pais;
+      if (agenteMap[clave]) { validaciones.push(impValRow('warn', 'Agentes: "'+r.nombre+'" en "'+r.pais+'" duplicado')); return; }
+      var id = uid();
+      agenteMap[clave] = id;
+      agenteValidos.push({ id:id, nombre:r.nombre, paisId:paisMap[r.pais], paisNombre:r.pais,
+        prioridad:parseInt(r.prioridad)||99, tarifas:{}, tarifasCliente:{} });
+    });
+    validaciones.push(impValRow('ok', agenteValidos.length + ' proveedores válidos'));
+
+    // ── Validar tarifas ──
+    var tarifasOk = 0;
+    rawTarifas.forEach(function(r, i) {
+      var fila = i+2;
+      if (!r.agente||!r.pais||!r.articulo_codigo) { validaciones.push(impValRow('warn', 'Tarifas fila '+fila+': campos incompletos, omitida')); return; }
+      var clave = r.agente+'|'+r.pais;
+      var agId = agenteMap[clave];
+      if (!agId) { validaciones.push(impValRow('err', 'Tarifas fila '+fila+': agente "'+r.agente+'" en "'+r.pais+'" no encontrado')); errores++; return; }
+      var artId = artMap[r.articulo_codigo];
+      if (!artId) { validaciones.push(impValRow('err', 'Tarifas fila '+fila+': artículo "'+r.articulo_codigo+'" no encontrado')); errores++; return; }
+      var ag = agenteValidos.find(function(a){ return a.id===agId; });
+      if (ag) {
+        if (r.costo !== '') ag.tarifas[artId] = parseFloat(r.costo)||0;
+        if (r.tarifa_cliente !== '') ag.tarifasCliente[artId] = parseFloat(r.tarifa_cliente)||0;
+        tarifasOk++;
+      }
+    });
+    validaciones.push(impValRow('ok', tarifasOk + ' tarifas asignadas'));
+
+    // Mostrar resumen
+    document.getElementById('imp-n-art').textContent     = artValidos.length;
+    document.getElementById('imp-n-paises').textContent  = paisValidos.length;
+    document.getElementById('imp-n-agentes').textContent = agenteValidos.length;
+    document.getElementById('imp-n-tarifas').textContent = tarifasOk;
+    document.getElementById('imp-validation').innerHTML = validaciones.join('');
+
+    window._impData = { articulos: artValidos, paises: paisValidos, agentes: agenteValidos };
+
+    impMostrarStep(2);
+
+    if (errores > 0) {
+      var w2 = document.getElementById('imp-warn-2');
+      w2.textContent = 'Hay ' + errores + ' error(es) que impedirán importar esas filas. El resto se importará igual.';
+      w2.style.display = 'block';
+    }
+
+  } catch(e) {
+    warnEl.textContent = 'Error al leer el Sheet: ' + e.message;
+    warnEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Verificar datos →';
+  }
+}
+
+async function impEjecutar() {
+  if (!window._impData || !window._db) return;
+  impMostrarStep(3);
+
+  var data = window._impData;
+  var db   = window._db;
+
+  function progLoading(key) {
+    var el = document.getElementById('imp-prog-'+key);
+    el.classList.add('loading');
+    el.querySelector('.imp-icon').textContent = '↻';
+  }
+  function progDone(key, n) {
+    var el = document.getElementById('imp-prog-'+key);
+    el.classList.remove('loading'); el.classList.add('done');
+    el.querySelector('.imp-icon').textContent = '✓';
+    document.getElementById('imp-prog-'+key+'-c').textContent = n + ' escritos';
+  }
+  function progError(key, msg) {
+    var el = document.getElementById('imp-prog-'+key);
+    el.classList.remove('loading'); el.classList.add('error');
+    el.querySelector('.imp-icon').textContent = '✕';
+    document.getElementById('imp-prog-'+key+'-c').textContent = msg;
+  }
+
+  var totalEscritos = 0;
+
+  try {
+    // Artículos
+    progLoading('art');
+    var BATCH_SIZE = 400; // Firestore permite 500 por batch
+
+    async function writeBatches(coleccion, items, mapFn) {
+      var i = 0;
+      while (i < items.length) {
+        var batch = writeBatch(db);
+        var slice = items.slice(i, i + BATCH_SIZE);
+        slice.forEach(function(item) {
+          var ref = doc(db, coleccion, item.id);
+          batch.set(ref, mapFn(item));
+        });
+        await batch.commit();
+        i += BATCH_SIZE;
+      }
+    }
+
+    await writeBatches('articulos', data.articulos, function(a) {
+      return { nombre:a.nombre, codigo:a.codigo, monto:a.monto, tasas:a.tasas, vinculados:a.vinculados, desc:a.desc };
+    });
+    progDone('art', data.articulos.length);
+    totalEscritos += data.articulos.length;
+
+    // Países
+    progLoading('paises');
+    await writeBatches('proveedores', data.paises, function(p) {
+      return { nombre:p.nombre, moneda:p.moneda, courier:p.courier, courierTarifa:p.courierTarifa,
+               poa:p.poa, poaTarifa:p.poaTarifa, requerimientos:p.requerimientos };
+    });
+    progDone('paises', data.paises.length);
+    totalEscritos += data.paises.length;
+
+    // Agentes
+    progLoading('agentes');
+    await writeBatches('agentes', data.agentes, function(a) {
+      return { nombre:a.nombre, paisId:a.paisId, paisNombre:a.paisNombre,
+               prioridad:a.prioridad, tarifas:a.tarifas, tarifasCliente:a.tarifasCliente };
+    });
+    progDone('agentes', data.agentes.length);
+    totalEscritos += data.agentes.length;
+
+    // Éxito
+    document.getElementById('imp-result-icon').textContent = '✓';
+    document.getElementById('imp-result-icon').style.color = 'var(--green)';
+    document.getElementById('imp-result-title').textContent = 'Importación completada';
+    document.getElementById('imp-result-msg').textContent =
+      totalEscritos + ' registros escritos en Firebase. Los datos ya están disponibles en todos los módulos.';
+    impMostrarStep(4);
+    toast('Base de datos importada correctamente (' + totalEscritos + ' registros)', 'ok');
+
+  } catch(e) {
+    progError('agentes', 'Error');
+    document.getElementById('imp-result-icon').textContent = '✕';
+    document.getElementById('imp-result-icon').style.color = 'var(--red)';
+    document.getElementById('imp-result-title').textContent = 'Error al importar';
+    document.getElementById('imp-result-msg').textContent = e.message;
+    impMostrarStep(4);
+    toast('Error en la importación: ' + e.message, 'err');
+  }
+}
+
+// ── Registrar nav buttons con JS (evita ReferenceError por timing de módulo) ──
+document.querySelectorAll('.nav-btn[data-section]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    window.showSection(btn.dataset.section, btn);
+  });
+});
+document.querySelector('.nav-btn[data-import]').addEventListener('click', function() {
+  window.abrirModalImportar();
+});
+
+</script>
+</body>
+</html>
