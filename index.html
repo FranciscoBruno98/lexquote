@@ -2346,7 +2346,7 @@ async function impVerificar() {
       if (!r.codigo) { validaciones.push(impValRow('err', 'Artículos fila '+fila+': falta "codigo"')); errores++; return; }
       if (!r.nombre) { validaciones.push(impValRow('err', 'Artículos fila '+fila+': falta "nombre"')); errores++; return; }
       if (artMap[r.codigo]) { validaciones.push(impValRow('warn', 'Artículos: código "'+r.codigo+'" duplicado, se usará el primero')); return; }
-      var id = uid();
+      var id = 'art-' + r.codigo.toLowerCase().replace(/[^a-z0-9]/g, '_');
       artMap[r.codigo] = id;
       artValidos.push({ id:id, codigo:r.codigo, nombre:r.nombre,
         monto: parseFloat(r.monto)||0, tasas:r.tasas||'',
@@ -2366,7 +2366,7 @@ async function impVerificar() {
       if (!monedasOk.includes(moneda)) { validaciones.push(impValRow('warn', 'Países "'+r.nombre+'": moneda "'+moneda+'" no reconocida, usando USD')); moneda='USD'; }
       var courier = r.courier && (r.courier.toUpperCase()==='TRUE'||r.courier==='1');
       var poa     = r.poa     && (r.poa.toUpperCase()==='TRUE'    ||r.poa==='1');
-      var id = uid();
+      var id = 'pais-' + r.nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
       paisMap[r.nombre] = id;
       paisValidos.push({ id:id, nombre:r.nombre, moneda:moneda,
         courier:courier, courierTarifa:parseFloat(r.courier_tarifa)||0,
@@ -2385,7 +2385,7 @@ async function impVerificar() {
       if (!paisMap[r.pais]) { validaciones.push(impValRow('err', 'Agentes "'+r.nombre+'": país "'+r.pais+'" no existe en hoja paises')); errores++; return; }
       var clave = r.nombre+'|'+r.pais;
       if (agenteMap[clave]) { validaciones.push(impValRow('warn', 'Agentes: "'+r.nombre+'" en "'+r.pais+'" duplicado')); return; }
-      var id = uid();
+      var id = 'ag-' + (r.nombre+'_'+r.pais).toLowerCase().replace(/[^a-z0-9]/g, '_');
       agenteMap[clave] = id;
       agenteValidos.push({ id:id, nombre:r.nombre, paisId:paisMap[r.pais], paisNombre:r.pais,
         prioridad:parseInt(r.prioridad)||99, tarifas:{}, tarifasCliente:{} });
