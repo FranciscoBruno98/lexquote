@@ -2364,8 +2364,9 @@ async function impVerificar() {
       if (paisMap[r.nombre]) { validaciones.push(impValRow('warn', 'Países: "'+r.nombre+'" duplicado, se usará el primero')); return; }
       var moneda = (r.moneda||'USD').toUpperCase();
       if (!monedasOk.includes(moneda)) { validaciones.push(impValRow('warn', 'Países "'+r.nombre+'": moneda "'+moneda+'" no reconocida, usando USD')); moneda='USD'; }
-      var courier = r.courier && (r.courier.toUpperCase()==='TRUE'||r.courier==='1');
-      var poa     = r.poa     && (r.poa.toUpperCase()==='TRUE'    ||r.poa==='1');
+      function parseBool(v) { if (!v) return false; var u=v.toString().trim().toUpperCase(); return u==='TRUE'||u==='1'||u==='SI'||u==='SÍ'||u==='YES'; }
+      var courier = parseBool(r.courier);
+      var poa     = parseBool(r.poa);
       var id = 'pais-' + r.nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
       paisMap[r.nombre] = id;
       paisValidos.push({ id:id, nombre:r.nombre, moneda:moneda,
