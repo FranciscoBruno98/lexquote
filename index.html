@@ -410,10 +410,24 @@
               </div>
               <div class="form-grid">
                 <div class="form-group">
-                  <label>Costo País</label>
+                  <label>Tasa Proveedor</label>
                   <div class="input-group">
                     <span class="input-prefix">$</span>
-                    <input type="number" id="cot-costo" placeholder="0.00" step="0.01" min="0" oninput="calcularGanancia()">
+                    <input type="number" id="cot-tasa" placeholder="0.00" step="0.01" min="0" oninput="cotRecalcCosto()">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Honorario Proveedor</label>
+                  <div class="input-group">
+                    <span class="input-prefix">$</span>
+                    <input type="number" id="cot-hon" placeholder="0.00" step="0.01" min="0" oninput="cotRecalcCosto()">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Total Costo Proveedor</label>
+                  <div class="input-group">
+                    <span class="input-prefix">$</span>
+                    <input type="number" id="cot-costo" placeholder="0.00" step="0.01" min="0" readonly oninput="calcularGanancia()" style="opacity:0.6;background:var(--surface2);">
                   </div>
                 </div>
                 <div class="form-group">
@@ -1171,33 +1185,67 @@ window.abrirModalAgente = (id) => {
     lista.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Primero cargá artículos</div>`;
   } else {
     lista.innerHTML =
-      `<div style="display:grid;grid-template-columns:1fr 140px 140px;gap:10px;padding:5px 0 8px;border-bottom:1px solid var(--border2);">
+      `<div style="display:grid;grid-template-columns:1fr 110px 110px 110px 110px;gap:8px;padding:5px 0 8px;border-bottom:1px solid var(--border2);">
         <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Artículo</div>
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Costo Proveedor</div>
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Tasa</div>
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Honorario</div>
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Total Costo</div>
         <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">Nuestra Tarifa</div>
       </div>` +
-      window._articulos.map(a => `
-      <div style="display:grid;grid-template-columns:1fr 140px 140px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
+      window._articulos.map(a => {
+        const t = tarifas[a.id] || {};
+        const tasa = typeof t === 'object' ? (t.tasa !== undefined ? t.tasa : '') : '';
+        const hon  = typeof t === 'object' ? (t.honorario !== undefined ? t.honorario : '') : (t !== undefined ? t : '');
+        const cli  = tarifasCliente[a.id] !== undefined ? tarifasCliente[a.id] : '';
+        return `
+      <div style="display:grid;grid-template-columns:1fr 110px 110px 110px 110px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
         <div>
           <div style="font-size:12px;">${esc(a.nombre)}</div>
           <div style="font-size:10px;color:var(--gold);letter-spacing:0.06em;">${esc(a.codigo)}</div>
         </div>
         <div class="input-group">
           <span class="input-prefix">$</span>
-          <input type="number" id="ag-tarifa-art-${a.id}" placeholder="0.00" step="0.01" min="0"
-            value="${tarifas[a.id] !== undefined ? tarifas[a.id] : ''}"
+          <input type="number" id="ag-tasa-art-${a.id}" placeholder="0.00" step="0.01" min="0"
+            value="${tasa}" oninput="agRecalcTotal('${a.id}')"
             style="padding:7px 8px 7px 24px;font-size:12px;">
         </div>
         <div class="input-group">
           <span class="input-prefix">$</span>
+          <input type="number" id="ag-hon-art-${a.id}" placeholder="0.00" step="0.01" min="0"
+            value="${hon}" oninput="agRecalcTotal('${a.id}')"
+            style="padding:7px 8px 7px 24px;font-size:12px;">
+        </div>
+        <div class="input-group">
+          <span class="input-prefix">$</span>
+          <input type="number" id="ag-total-art-${a.id}" placeholder="0.00" step="0.01" min="0" readonly
+            value="${(parseFloat(tasa)||0)+(parseFloat(hon)||0) || ''}"
+            style="padding:7px 8px 7px 24px;font-size:12px;opacity:0.6;background:var(--surface2);">
+        </div>
+        <div class="input-group">
+          <span class="input-prefix">$</span>
           <input type="number" id="ag-tarifa-cliente-art-${a.id}" placeholder="0.00" step="0.01" min="0"
-            value="${tarifasCliente[a.id] !== undefined ? tarifasCliente[a.id] : ''}"
+            value="${cli}"
             style="padding:7px 8px 7px 24px;font-size:12px;border-color:rgba(201,168,76,0.3);">
         </div>
-      </div>`).join('');
+      </div>`;
+      }).join('');
   }
   document.getElementById('modal-agente').classList.add('open');
   setTimeout(() => document.getElementById('agente-nombre').focus(), 80);
+};
+
+window.cotRecalcCosto = function() {
+  var tasa = parseFloat(document.getElementById('cot-tasa').value) || 0;
+  var hon  = parseFloat(document.getElementById('cot-hon').value)  || 0;
+  document.getElementById('cot-costo').value = (tasa + hon) || '';
+  calcularGanancia();
+};
+
+window.agRecalcTotal = function(artId) {
+  var tasa = parseFloat(document.getElementById('ag-tasa-art-' + artId).value) || 0;
+  var hon  = parseFloat(document.getElementById('ag-hon-art-'  + artId).value) || 0;
+  var tot  = document.getElementById('ag-total-art-' + artId);
+  if (tot) tot.value = (tasa + hon) || '';
 };
 
 window.guardarAgente = async () => {
@@ -1209,8 +1257,13 @@ window.guardarAgente = async () => {
   const tarifas = {};
   const tarifasCliente = {};
   window._articulos.forEach(a => {
-    const el = document.getElementById('ag-tarifa-art-' + a.id);
-    if (el && el.value !== '') tarifas[a.id] = parseFloat(el.value);
+    const elT = document.getElementById('ag-tasa-art-' + a.id);
+    const elH = document.getElementById('ag-hon-art-' + a.id);
+    const tasa = elT && elT.value !== '' ? parseFloat(elT.value) : null;
+    const hon  = elH && elH.value !== '' ? parseFloat(elH.value) : null;
+    if (tasa !== null || hon !== null) {
+      tarifas[a.id] = { tasa: tasa || 0, honorario: hon || 0 };
+    }
     const elC = document.getElementById('ag-tarifa-cliente-art-' + a.id);
     if (elC && elC.value !== '') tarifasCliente[a.id] = parseFloat(elC.value);
   });
@@ -1364,8 +1417,18 @@ window.actualizarCotizador = () => {
   const agente = window._agentes.find(a => a.id === agenteId);
 
   if (agente && artId) {
-    if (agente.tarifas?.[artId] !== undefined)
-      document.getElementById('cot-costo').value = agente.tarifas[artId];
+    if (agente.tarifas && agente.tarifas[artId] !== undefined) {
+      var t = agente.tarifas[artId];
+      if (typeof t === 'object' && t !== null) {
+        document.getElementById('cot-tasa').value = t.tasa || '';
+        document.getElementById('cot-hon').value  = t.honorario || '';
+        document.getElementById('cot-costo').value = ((t.tasa||0)+(t.honorario||0)) || '';
+      } else {
+        document.getElementById('cot-tasa').value = '';
+        document.getElementById('cot-hon').value  = '';
+        document.getElementById('cot-costo').value = t;
+      }
+    }
     if (agente.tarifasCliente?.[artId] !== undefined)
       document.getElementById('cot-tarifa').value = agente.tarifasCliente[artId];
     else
@@ -1440,7 +1503,7 @@ window.calcularGanancia = () => {
 };
 
 window.limpiarCotizador = () => {
-  ['cot-costo','cot-tarifa','cot-notas'].forEach(id => document.getElementById(id).value = '');
+  ['cot-tasa','cot-hon','cot-costo','cot-tarifa','cot-notas'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('cot-pais').value = '';
   document.getElementById('cot-proveedor').value = '';
   document.getElementById('cot-articulo').value = '';
@@ -1509,7 +1572,7 @@ window.renderComparador = () => {
   articulos.forEach(art => {
     agentesFilt.forEach(ag => {
       const pais = window._proveedores.find(p => p.id === ag.paisId);
-      const cT = (ag.tarifas && ag.tarifas[art.id] !== undefined) ? ag.tarifas[art.id] : null;
+      const cT = (ag.tarifas && ag.tarifas[art.id] !== undefined) ? getCostoProveedor(ag, art.id) : null;
       const nT = (ag.tarifasCliente && ag.tarifasCliente[art.id] !== undefined) ? ag.tarifasCliente[art.id] : null;
       if (cT === null && nT === null) return;
       const dif = (nT !== null && cT !== null) ? nT - cT : null;
@@ -1663,7 +1726,11 @@ window.mAgregar = function() {
       '<div class="form-group" id="mag-grp-' + s.id + '" style="display:none;"><label>Proveedor</label><select id="mag-' + s.id + '" onchange="mOnAgente(' + q + s.id + q + ',this.value)"><option value="">—</option></select></div>' +
       '<div class="form-group"><label>Artículo / Tipo de Trabajo</label><select onchange="mOnArt(' + q + s.id + q + ',this.value)">' + mArtOpts() + '</select></div>' +
       '<div class="form-grid">' +
-        '<div class="form-group"><label>Costo País</label><div class="input-group"><span class="input-prefix">$</span><input type="number" id="mcosto-' + s.id + '" placeholder="0.00" step="0.01" min="0" oninput="mOnInput(' + q + s.id + q + ')"></div></div>' +
+        '<div class="form-group"><label>Tasa Proveedor</label><div class="input-group"><span class="input-prefix">$</span><input type="number" id="mtasa-' + s.id + '" placeholder="0.00" step="0.01" min="0" oninput="mOnTasaHon(' + q + s.id + q + ')"></div></div>' +
+        '<div class="form-group"><label>Honorario Proveedor</label><div class="input-group"><span class="input-prefix">$</span><input type="number" id="mhon-' + s.id + '" placeholder="0.00" step="0.01" min="0" oninput="mOnTasaHon(' + q + s.id + q + ')"></div></div>' +
+      '</div>' +
+      '<div class="form-grid">' +
+        '<div class="form-group"><label>Total Costo Proveedor</label><div class="input-group"><span class="input-prefix">$</span><input type="number" id="mcosto-' + s.id + '" placeholder="0.00" step="0.01" min="0" readonly oninput="mOnInput(' + q + s.id + q + ')" style="opacity:0.6;background:var(--surface2);"></div></div>' +
         '<div class="form-group"><label>Nuestra Tarifa</label><div class="input-group"><span class="input-prefix">$</span><input type="number" id="mtarifa-' + s.id + '" placeholder="0.00" step="0.01" min="0" oninput="mOnInput(' + q + s.id + q + ')"></div></div>' +
       '</div>' +
       '<div class="form-group"><label>Moneda</label><select id="mmoneda-' + s.id + '" onchange="mOnInput(' + q + s.id + q + ')">' + mMonedaOpts('USD') + '</select></div>' +
@@ -1678,15 +1745,19 @@ window.mAgregarVinculado = function(linkedTo, pais, art) {
   var moneda = (pais && pais.moneda) || 'USD';
   var agenteId = sMain ? sMain.agenteId : '';
   // Tarifas del proveedor si las tiene
-  var costo = 0, tarifa = 0;
+  var costo = 0, costoTasa = 0, costoHon = 0, tarifa = 0;
   if (agenteId) {
     var ag = window._agentes.find(function(a){ return a.id===agenteId; });
     if (ag) {
-      if (ag.tarifas && ag.tarifas[art.id] !== undefined) costo = ag.tarifas[art.id];
+      costo = getCostoProveedor(ag, art.id);
+      if (ag.tarifas && ag.tarifas[art.id] && typeof ag.tarifas[art.id] === 'object') {
+        costoTasa = ag.tarifas[art.id].tasa || 0;
+        costoHon  = ag.tarifas[art.id].honorario || 0;
+      }
       if (ag.tarifasCliente && ag.tarifasCliente[art.id] !== undefined) tarifa = ag.tarifasCliente[art.id];
     }
   }
-  var s = {id:mUID(), paisId: pais ? pais.id : '', agenteId:agenteId, artId:art.id, costo:costo, tarifa:tarifa, moneda:moneda, notas:'', linkedTo:linkedTo, esExtra:true, tipoExtra:'vinculado'};
+  var s = {id:mUID(), paisId: pais ? pais.id : '', agenteId:agenteId, artId:art.id, tasa:costoTasa, honorario:costoHon, costo:costo, tarifa:tarifa, moneda:moneda, notas:'', linkedTo:linkedTo, esExtra:true, tipoExtra:'vinculado'};
   window._mSvcs.push(s);
   // Insertar después del último bloque vinculado a este padre
   var todos = window._mSvcs.filter(function(x){ return x.linkedTo===linkedTo && x.id!==s.id; });
@@ -1707,8 +1778,14 @@ window.mAgregarVinculado = function(linkedTo, pais, art) {
         '<div class="form-group"><label>Artículo (bloqueado)</label><input type="text" value="' + artNombre + ' [' + esc(art.codigo) + ']" disabled style="opacity:0.6;cursor:not-allowed;"></div>' +
       '</div>' +
       '<div class="form-grid">' +
-        '<div class="form-group"><label>Costo País</label><div class="input-group"><span class="input-prefix">$</span>' +
-          '<input type="number" id="mcosto-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="' + costo + '" oninput="mOnInput(&#39;' + s.id + '&#39;)"></div></div>' +
+        '<div class="form-group"><label>Tasa Proveedor</label><div class="input-group"><span class="input-prefix">$</span>' +
+          '<input type="number" id="mtasa-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="' + costoTasa + '" oninput="mOnTasaHon(&#39;' + s.id + '&#39;)"></div></div>' +
+        '<div class="form-group"><label>Honorario Proveedor</label><div class="input-group"><span class="input-prefix">$</span>' +
+          '<input type="number" id="mhon-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="' + costoHon + '" oninput="mOnTasaHon(&#39;' + s.id + '&#39;)"></div></div>' +
+      '</div>' +
+      '<div class="form-grid">' +
+        '<div class="form-group"><label>Total Costo Proveedor</label><div class="input-group"><span class="input-prefix">$</span>' +
+          '<input type="number" id="mcosto-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="' + costo + '" readonly oninput="mOnInput(&#39;' + s.id + '&#39;)" style="opacity:0.6;background:var(--surface2);"></div></div>' +
         '<div class="form-group"><label>Nuestra Tarifa</label><div class="input-group"><span class="input-prefix">$</span>' +
           '<input type="number" id="mtarifa-' + s.id + '" placeholder="0.00" step="0.01" min="0" value="' + tarifa + '" oninput="mOnInput(&#39;' + s.id + '&#39;)"></div></div>' +
       '</div>' +
@@ -1879,12 +1956,25 @@ window.mOnArt = function(id, artId) {
   mRecalc();
 };
 
+window.mOnTasaHon = function(id) {
+  var elT = document.getElementById('mtasa-'+id);
+  var elH = document.getElementById('mhon-'+id);
+  var tasa = parseFloat(elT ? elT.value : 0) || 0;
+  var hon  = parseFloat(elH ? elH.value : 0) || 0;
+  var total = tasa + hon;
+  var elC = document.getElementById('mcosto-'+id);
+  if (elC) elC.value = total || '';
+  var s = window._mSvcs.find(function(x){ return x.id===id; });
+  if (s) { s.tasa = tasa; s.honorario = hon; s.costo = total; }
+  mRecalc();
+};
+
 window.mOnInput = function(id) {
   var s = window._mSvcs.find(function(x){ return x.id===id; });
   s.costo  = parseFloat(document.getElementById('mcosto-'+id).value)||0;
   s.tarifa = parseFloat(document.getElementById('mtarifa-'+id).value)||0;
   s.moneda = document.getElementById('mmoneda-'+id).value;
-  s.notas  = document.getElementById('mnotas-'+id).value;
+  if (document.getElementById('mnotas-'+id)) s.notas = document.getElementById('mnotas-'+id).value;
   mRecalc();
 };
 
@@ -1893,7 +1983,18 @@ function mCargarTarifas(id) {
   var ag = window._agentes.find(function(a){ return a.id===s.agenteId; });
   var art = window._articulos.find(function(a){ return a.id===s.artId; });
   if (ag && s.artId) {
-    if (ag.tarifas && ag.tarifas[s.artId] !== undefined) { document.getElementById('mcosto-'+id).value = ag.tarifas[s.artId]; s.costo = ag.tarifas[s.artId]; }
+    if (ag.tarifas && ag.tarifas[s.artId] !== undefined) {
+      var t = ag.tarifas[s.artId];
+      var tasa = (typeof t === 'object' && t) ? (t.tasa||0) : 0;
+      var hon  = (typeof t === 'object' && t) ? (t.honorario||0) : 0;
+      var total = typeof t === 'object' ? tasa+hon : (parseFloat(t)||0);
+      var elT = document.getElementById('mtasa-'+id);
+      var elH = document.getElementById('mhon-'+id);
+      if (elT) elT.value = tasa || '';
+      if (elH) elH.value = hon || '';
+      document.getElementById('mcosto-'+id).value = total || '';
+      s.tasa = tasa; s.honorario = hon; s.costo = total;
+    }
     if (ag.tarifasCliente && ag.tarifasCliente[s.artId] !== undefined) { document.getElementById('mtarifa-'+id).value = ag.tarifasCliente[s.artId]; s.tarifa = ag.tarifasCliente[s.artId]; }
   }
 }
@@ -2390,7 +2491,12 @@ async function impVerificar() {
       if (!artId) { validaciones.push(impValRow('err', 'Tarifas fila '+fila+': artículo "'+r.articulo_codigo+'" no encontrado')); errores++; return; }
       var ag = agenteValidos.find(function(a){ return a.id===agId; });
       if (ag) {
-        if (r.costo !== '') ag.tarifas[artId] = parseFloat(r.costo)||0;
+        if (r.tasa !== '' || r.honorario !== '') {
+          ag.tarifas[artId] = { tasa: parseFloat(r.tasa)||0, honorario: parseFloat(r.honorario)||0 };
+        } else if (r.costo !== '') {
+          // compatibilidad legado: columna costo única
+          ag.tarifas[artId] = { tasa: 0, honorario: parseFloat(r.costo)||0 };
+        }
         if (r.tarifa_cliente !== '') ag.tarifasCliente[artId] = parseFloat(r.tarifa_cliente)||0;
         tarifasOk++;
       }
