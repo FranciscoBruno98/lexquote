@@ -1185,47 +1185,51 @@ window.abrirModalAgente = (id) => {
     lista.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Primero cargá artículos</div>`;
   } else {
     lista.innerHTML =
-      `<div style="display:grid;grid-template-columns:1fr 110px 110px 110px 110px;gap:8px;padding:5px 0 8px;border-bottom:1px solid var(--border2);">
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Artículo</div>
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Tasa</div>
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Honorario</div>
+      `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:5px 0 8px;border-bottom:1px solid var(--border2);">
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Tasa Proveedor</div>
+        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Honorario Proveedor</div>
         <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Total Costo</div>
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">Nuestra Tarifa</div>
       </div>` +
       window._articulos.map(a => {
-        const t = tarifas[a.id] || {};
-        const tasa = typeof t === 'object' ? (t.tasa !== undefined ? t.tasa : '') : '';
-        const hon  = typeof t === 'object' ? (t.honorario !== undefined ? t.honorario : '') : (t !== undefined ? t : '');
+        const tRaw = tarifas[a.id];
+        const tasa = (tRaw && typeof tRaw === 'object') ? (tRaw.tasa ?? '') : '';
+        const hon  = (tRaw && typeof tRaw === 'object') ? (tRaw.honorario ?? '') : (tRaw !== undefined && tRaw !== null ? tRaw : '');
         const cli  = tarifasCliente[a.id] !== undefined ? tarifasCliente[a.id] : '';
+        const totalVal = (parseFloat(tasa)||0)+(parseFloat(hon)||0);
         return `
-      <div style="display:grid;grid-template-columns:1fr 110px 110px 110px 110px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
-        <div>
-          <div style="font-size:12px;">${esc(a.nombre)}</div>
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:500;">${esc(a.nombre)}</div>
           <div style="font-size:10px;color:var(--gold);letter-spacing:0.06em;">${esc(a.codigo)}</div>
         </div>
-        <div class="input-group">
-          <span class="input-prefix">$</span>
-          <input type="number" id="ag-tasa-art-${a.id}" placeholder="0.00" step="0.01" min="0"
-            value="${tasa}" oninput="agRecalcTotal('${a.id}')"
-            style="padding:7px 8px 7px 24px;font-size:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div class="input-group">
+            <span class="input-prefix">$</span>
+            <input type="number" id="ag-tasa-art-${a.id}" placeholder="0.00" step="0.01" min="0"
+              value="${tasa}" oninput="agRecalcTotal('${a.id}')"
+              style="padding:7px 8px 7px 24px;font-size:12px;">
+          </div>
+          <div class="input-group">
+            <span class="input-prefix">$</span>
+            <input type="number" id="ag-hon-art-${a.id}" placeholder="0.00" step="0.01" min="0"
+              value="${hon}" oninput="agRecalcTotal('${a.id}')"
+              style="padding:7px 8px 7px 24px;font-size:12px;">
+          </div>
+          <div class="input-group">
+            <span class="input-prefix">$</span>
+            <input type="number" id="ag-total-art-${a.id}" placeholder="0.00" step="0.01" min="0" readonly
+              value="${totalVal || ''}"
+              style="padding:7px 8px 7px 24px;font-size:12px;opacity:0.6;background:var(--surface2);">
+          </div>
         </div>
-        <div class="input-group">
-          <span class="input-prefix">$</span>
-          <input type="number" id="ag-hon-art-${a.id}" placeholder="0.00" step="0.01" min="0"
-            value="${hon}" oninput="agRecalcTotal('${a.id}')"
-            style="padding:7px 8px 7px 24px;font-size:12px;">
-        </div>
-        <div class="input-group">
-          <span class="input-prefix">$</span>
-          <input type="number" id="ag-total-art-${a.id}" placeholder="0.00" step="0.01" min="0" readonly
-            value="${(parseFloat(tasa)||0)+(parseFloat(hon)||0) || ''}"
-            style="padding:7px 8px 7px 24px;font-size:12px;opacity:0.6;background:var(--surface2);">
-        </div>
-        <div class="input-group">
-          <span class="input-prefix">$</span>
-          <input type="number" id="ag-tarifa-cliente-art-${a.id}" placeholder="0.00" step="0.01" min="0"
-            value="${cli}"
-            style="padding:7px 8px 7px 24px;font-size:12px;border-color:rgba(201,168,76,0.3);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+          <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);">Nuestra Tarifa</div>
+          <div class="input-group">
+            <span class="input-prefix">$</span>
+            <input type="number" id="ag-tarifa-cliente-art-${a.id}" placeholder="0.00" step="0.01" min="0"
+              value="${cli}"
+              style="padding:7px 8px 7px 24px;font-size:12px;border-color:rgba(201,168,76,0.3);">
+          </div>
         </div>
       </div>`;
       }).join('');
