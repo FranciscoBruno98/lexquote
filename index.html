@@ -357,6 +357,7 @@
         <div class="sync-dot" id="sync-dot"></div>
         <span id="sync-label">Conectando...</span>
       </div>
+      <button class="btn-settings" onclick="abrirConfigPDF()" style="border-color:rgba(201,168,76,0.4);color:var(--gold);">▤ Configuración</button>
       <button class="btn-settings" onclick="mostrarConfiguracion()">⚙ Reconfigurar</button>
     </div>
   </header>
@@ -758,6 +759,215 @@
     <div class="modal-footer" id="imp-footer">
       <button class="btn btn-ghost" onclick="cerrarModal('modal-importar')" id="imp-btn-cancel">Cancelar</button>
       <button class="btn btn-primary" id="imp-btn-next" onclick="impNextStep()">Verificar datos →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL CONFIGURACIÓN PDF
+══════════════════════════════════════════════ -->
+<style>
+  .cfg-pdf-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(6px); z-index:300; align-items:center; justify-content:center; }
+  .cfg-pdf-overlay.open { display:flex; }
+  .cfg-pdf-box { background:var(--surface); border:1px solid var(--border2); border-radius:16px; width:680px; max-width:96vw; max-height:92vh; overflow-y:auto; animation:slideUp 0.22s ease; }
+  .cfg-pdf-header { padding:20px 26px 16px; border-bottom:1px solid var(--border); background:linear-gradient(135deg,var(--gold-glow),transparent); display:flex; align-items:center; justify-content:space-between; }
+  .cfg-pdf-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:500; color:var(--gold); }
+  .cfg-pdf-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); background:var(--surface2); }
+  .cfg-pdf-tab { padding:11px 20px; background:none; border:none; color:var(--text3); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; border-bottom:2px solid transparent; position:relative; top:1px; transition:all 0.18s; }
+  .cfg-pdf-tab:hover { color:var(--text2); }
+  .cfg-pdf-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+  .cfg-pdf-body { padding:24px 26px; }
+  .cfg-section-label { font-size:10px; letter-spacing:0.13em; text-transform:uppercase; color:var(--text3); margin-bottom:14px; }
+
+  /* Templates grid */
+  .tpl-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:26px; }
+  .tpl-card { border:2px solid var(--border); border-radius:10px; overflow:hidden; cursor:pointer; transition:all 0.2s; position:relative; }
+  .tpl-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+  .tpl-card.selected { border-color:var(--gold); box-shadow:0 0 0 1px var(--gold), 0 4px 20px rgba(201,168,76,0.15); }
+  .tpl-preview { width:100%; height:110px; display:block; position:relative; overflow:hidden; }
+  .tpl-label { padding:8px 10px; background:var(--surface2); border-top:1px solid var(--border); }
+  .tpl-name { font-size:11px; color:var(--text); letter-spacing:0.06em; }
+  .tpl-desc { font-size:10px; color:var(--text3); margin-top:2px; }
+  .tpl-check { position:absolute; top:7px; right:7px; width:18px; height:18px; border-radius:50%; background:var(--gold); display:none; align-items:center; justify-content:center; font-size:9px; color:#0e0f0d; }
+  .tpl-card.selected .tpl-check { display:flex; }
+
+  /* Color picker section */
+  .color-section { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+  .color-row { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
+  .color-swatch { width:28px; height:28px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all 0.15s; flex-shrink:0; }
+  .color-swatch:hover { transform:scale(1.15); }
+  .color-swatch.active { border-color:var(--text); box-shadow:0 0 0 2px var(--bg); }
+  .color-custom-wrap { display:flex; align-items:center; gap:8px; margin-top:10px; }
+  .color-custom-wrap label { font-size:10px; color:var(--text3); letter-spacing:0.08em; text-transform:uppercase; }
+  input[type="color"].color-picker-input { width:36px; height:36px; padding:2px; border:1px solid var(--border2); border-radius:6px; background:var(--surface3); cursor:pointer; }
+
+  /* Preview label section */
+  .cfg-pdf-footer { padding:14px 26px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; background:var(--surface2); border-radius:0 0 16px 16px; }
+</style>
+
+<div class="cfg-pdf-overlay" id="modal-cfg-pdf">
+  <div class="cfg-pdf-box">
+    <div class="cfg-pdf-header">
+      <span class="cfg-pdf-title">▤ Configuración</span>
+      <button class="modal-close" onclick="cerrarModal('modal-cfg-pdf')">✕</button>
+    </div>
+    <div class="cfg-pdf-tabs">
+      <button class="cfg-pdf-tab active" data-cfgtab="pdf">PDF Exportable</button>
+    </div>
+    <div class="cfg-pdf-body">
+
+      <div class="cfg-section-label">Elegí un template para tus cotizaciones</div>
+
+      <div class="tpl-grid" id="tpl-grid">
+
+        <!-- TEMPLATE 1: Classic Dark -->
+        <div class="tpl-card" id="tpl-card-1" onclick="seleccionarTemplate(1)">
+          <div class="tpl-check">✓</div>
+          <svg class="tpl-preview" viewBox="0 0 220 110" xmlns="http://www.w3.org/2000/svg" id="tpl-svg-1">
+            <!-- fondo -->
+            <rect width="220" height="110" fill="#0e0f0d"/>
+            <!-- header bar -->
+            <rect width="220" height="30" fill="#161714"/>
+            <rect y="30" width="220" height="1.2" fill="#c9a84c" id="t1-accent-bar"/>
+            <!-- logo text -->
+            <text x="12" y="13" font-family="serif" font-size="11" font-weight="bold" fill="#c9a84c" id="t1-logo">LexQuote</text>
+            <text x="12" y="22" font-family="monospace" font-size="5" fill="#5c5c57" letter-spacing="1">COTIZADOR PROFESIONAL</text>
+            <!-- COT number right -->
+            <text x="208" y="13" font-family="monospace" font-size="7" fill="#c9a84c" text-anchor="end" id="t1-num">COT-2025-0042</text>
+            <text x="208" y="22" font-family="monospace" font-size="5" fill="#5c5c57" text-anchor="end">25 de Abril, 2025</text>
+            <!-- body rows -->
+            <rect x="12" y="38" width="196" height="12" fill="#161714" rx="2"/>
+            <text x="17" y="47" font-family="monospace" font-size="5.5" fill="#9a9890">ESTADOS UNIDOS</text>
+            <text x="203" y="47" font-family="monospace" font-size="5.5" fill="#e8e6df" text-anchor="end">$ 1,200.00 USD</text>
+            <rect x="12" y="53" width="196" height="12" fill="#131312" rx="2"/>
+            <text x="17" y="62" font-family="monospace" font-size="5.5" fill="#9a9890">BRASIL</text>
+            <text x="203" y="62" font-family="monospace" font-size="5.5" fill="#e8e6df" text-anchor="end">$ 800.00 USD</text>
+            <!-- total box -->
+            <rect x="12" y="72" width="196" height="20" fill="#1e1f1c" rx="2"/>
+            <rect x="12" y="72" width="3" height="20" fill="#c9a84c" id="t1-total-accent"/>
+            <text x="20" y="80" font-family="monospace" font-size="5" fill="#5c5c57">TOTAL GENERAL</text>
+            <text x="203" y="86" font-family="monospace" font-size="10" fill="#c9a84c" text-anchor="end" font-weight="bold" id="t1-total">$ 2,000.00</text>
+            <!-- footer line -->
+            <rect y="100" width="220" height="0.6" fill="#2e2f2a"/>
+            <text x="12" y="107" font-family="monospace" font-size="4" fill="#3a3b35">Este documento es una cotización y no constituye una factura.</text>
+          </svg>
+          <div class="tpl-label">
+            <div class="tpl-name">Classic Dark</div>
+            <div class="tpl-desc">Elegante, oscuro, minimalista</div>
+          </div>
+        </div>
+
+        <!-- TEMPLATE 2: Corporate Light -->
+        <div class="tpl-card" id="tpl-card-2" onclick="seleccionarTemplate(2)">
+          <div class="tpl-check">✓</div>
+          <svg class="tpl-preview" viewBox="0 0 220 110" xmlns="http://www.w3.org/2000/svg" id="tpl-svg-2">
+            <rect width="220" height="110" fill="#f8f7f4"/>
+            <!-- header strip -->
+            <rect width="220" height="28" fill="#c9a84c" id="t2-header-bg"/>
+            <text x="12" y="12" font-family="serif" font-size="11" font-weight="bold" fill="#fff" id="t2-logo">LexQuote</text>
+            <text x="12" y="22" font-family="monospace" font-size="4.5" fill="rgba(255,255,255,0.7)">COTIZADOR PROFESIONAL</text>
+            <text x="208" y="12" font-family="monospace" font-size="7" fill="#fff" text-anchor="end">COT-2025-0042</text>
+            <text x="208" y="22" font-family="monospace" font-size="4.5" fill="rgba(255,255,255,0.7)" text-anchor="end">25 de Abril, 2025</text>
+            <!-- left accent bar -->
+            <rect x="0" y="28" width="4" height="82" fill="#c9a84c" id="t2-side-accent"/>
+            <!-- table header -->
+            <rect x="12" y="34" width="196" height="9" fill="#ede9df"/>
+            <text x="17" y="41" font-family="monospace" font-size="5" fill="#888" letter-spacing="0.5">SERVICIO</text>
+            <text x="203" y="41" font-family="monospace" font-size="5" fill="#888" text-anchor="end">TARIFA</text>
+            <!-- rows -->
+            <line x1="12" y1="43" x2="208" y2="43" stroke="#ddd" stroke-width="0.5"/>
+            <text x="17" y="51" font-family="monospace" font-size="5.5" fill="#333">Estados Unidos</text>
+            <text x="203" y="51" font-family="monospace" font-size="5.5" fill="#333" text-anchor="end">$ 1,200.00</text>
+            <line x1="12" y1="54" x2="208" y2="54" stroke="#ddd" stroke-width="0.5"/>
+            <text x="17" y="62" font-family="monospace" font-size="5.5" fill="#333">Brasil</text>
+            <text x="203" y="62" font-family="monospace" font-size="5.5" fill="#333" text-anchor="end">$ 800.00</text>
+            <!-- total -->
+            <rect x="12" y="68" width="196" height="16" fill="#c9a84c" id="t2-total-bg" rx="2"/>
+            <text x="17" y="79" font-family="monospace" font-size="5" fill="#fff">TOTAL GENERAL</text>
+            <text x="203" y="79" font-family="monospace" font-size="9" fill="#fff" text-anchor="end" font-weight="bold">$ 2,000.00</text>
+            <!-- footer -->
+            <line x1="12" y1="90" x2="208" y2="90" stroke="#ddd" stroke-width="0.5"/>
+            <text x="12" y="97" font-family="monospace" font-size="4" fill="#aaa">Este documento es una cotización y no constituye una factura.</text>
+            <text x="203" y="97" font-family="monospace" font-size="6" fill="#c9a84c" text-anchor="end" font-weight="bold">LexQuote</text>
+          </svg>
+          <div class="tpl-label">
+            <div class="tpl-name">Corporate Light</div>
+            <div class="tpl-desc">Blanco, formal, corporativo</div>
+          </div>
+        </div>
+
+        <!-- TEMPLATE 3: Bold Modern -->
+        <div class="tpl-card" id="tpl-card-3" onclick="seleccionarTemplate(3)">
+          <div class="tpl-check">✓</div>
+          <svg class="tpl-preview" viewBox="0 0 220 110" xmlns="http://www.w3.org/2000/svg" id="tpl-svg-3">
+            <rect width="220" height="110" fill="#111213"/>
+            <!-- giant accent block left -->
+            <rect width="54" height="110" fill="#c9a84c" id="t3-left-block"/>
+            <!-- rotated text in block -->
+            <text x="-70" y="22" font-family="monospace" font-size="4.5" fill="rgba(0,0,0,0.25)" letter-spacing="2" transform="rotate(90)">COTIZACIÓN PROFESIONAL LEXQUOTE</text>
+            <!-- logo vertical -->
+            <text x="27" y="52" font-family="serif" font-size="13" font-weight="bold" fill="#0e0f0d" text-anchor="middle">L</text>
+            <text x="27" y="64" font-family="serif" font-size="13" font-weight="bold" fill="#0e0f0d" text-anchor="middle">Q</text>
+            <!-- right content -->
+            <text x="62" y="14" font-family="serif" font-size="10" font-weight="bold" fill="#e8e6df">LexQuote</text>
+            <text x="62" y="22" font-family="monospace" font-size="4" fill="#5c5c57" letter-spacing="1">COTIZACIÓN</text>
+            <text x="208" y="14" font-family="monospace" font-size="6.5" fill="#c9a84c" text-anchor="end" id="t3-num">COT-2025-0042</text>
+            <!-- divider -->
+            <rect x="62" y="26" width="146" height="0.7" fill="#2e2f2a"/>
+            <!-- rows -->
+            <rect x="62" y="30" width="146" height="11" fill="#1a1b19" rx="2"/>
+            <text x="67" y="38.5" font-family="monospace" font-size="5.5" fill="#9a9890">ESTADOS UNIDOS</text>
+            <text x="203" y="38.5" font-family="monospace" font-size="5.5" fill="#e8e6df" text-anchor="end">$ 1,200.00</text>
+            <rect x="62" y="43" width="146" height="11" fill="#161714" rx="2"/>
+            <text x="67" y="51.5" font-family="monospace" font-size="5.5" fill="#9a9890">BRASIL</text>
+            <text x="203" y="51.5" font-family="monospace" font-size="5.5" fill="#e8e6df" text-anchor="end">$ 800.00</text>
+            <!-- total -->
+            <rect x="62" y="58" width="146" height="18" fill="#1e1f1c" rx="2"/>
+            <text x="67" y="65.5" font-family="monospace" font-size="4.5" fill="#5c5c57">TOTAL</text>
+            <text x="203" y="70" font-family="monospace" font-size="9" fill="#c9a84c" text-anchor="end" font-weight="bold" id="t3-total">$ 2,000.00</text>
+            <!-- footer -->
+            <rect x="62" y="83" width="146" height="0.5" fill="#2e2f2a"/>
+            <text x="67" y="91" font-family="monospace" font-size="4" fill="#3a3b35">Cotización · No constituye factura</text>
+          </svg>
+          <div class="tpl-label">
+            <div class="tpl-name">Bold Modern</div>
+            <div class="tpl-desc">Audaz, geométrico, impactante</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Color picker -->
+      <div class="color-section">
+        <div class="cfg-section-label" style="margin-bottom:0;">Color de acento</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-bottom:12px;">Este color se aplicará al template seleccionado (encabezado, total, logo, líneas)</div>
+        <div class="color-row" id="color-swatches">
+          <div class="color-swatch" style="background:#c9a84c;" data-color="#c9a84c" onclick="elegirColor('#c9a84c',this)" title="Gold (original)"></div>
+          <div class="color-swatch" style="background:#3b82f6;" data-color="#3b82f6" onclick="elegirColor('#3b82f6',this)" title="Azul"></div>
+          <div class="color-swatch" style="background:#10b981;" data-color="#10b981" onclick="elegirColor('#10b981',this)" title="Verde"></div>
+          <div class="color-swatch" style="background:#ef4444;" data-color="#ef4444" onclick="elegirColor('#ef4444',this)" title="Rojo"></div>
+          <div class="color-swatch" style="background:#8b5cf6;" data-color="#8b5cf6" onclick="elegirColor('#8b5cf6',this)" title="Violeta"></div>
+          <div class="color-swatch" style="background:#f97316;" data-color="#f97316" onclick="elegirColor('#f97316',this)" title="Naranja"></div>
+          <div class="color-swatch" style="background:#06b6d4;" data-color="#06b6d4" onclick="elegirColor('#06b6d4',this)" title="Cyan"></div>
+          <div class="color-swatch" style="background:#e8e6df;" data-color="#e8e6df" onclick="elegirColor('#e8e6df',this)" title="Blanco roto"></div>
+          <div class="color-swatch" style="background:#64748b;" data-color="#64748b" onclick="elegirColor('#64748b',this)" title="Slate"></div>
+        </div>
+        <div class="color-custom-wrap">
+          <label>Color personalizado</label>
+          <input type="color" class="color-picker-input" id="color-custom-input" value="#c9a84c" oninput="elegirColorCustom(this.value)">
+          <span id="color-hex-label" style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;">#c9a84c</span>
+        </div>
+      </div>
+
+      <!-- Preview note -->
+      <div style="margin-top:14px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);border-left:2px solid var(--gold);font-size:11px;color:var(--text3);">
+        Las previsualizaciones de arriba se actualizan en tiempo real con el color que elegís.
+        Al exportar, el PDF usará el template y color guardados.
+      </div>
+    </div>
+    <div class="cfg-pdf-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-cfg-pdf')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarConfigPDF()">✓ Guardar configuración</button>
     </div>
   </div>
 </div>
@@ -2076,243 +2286,6 @@ window.mLimpiar = function() {
   mRecalc(); mAgregar();
 };
 
-window.mExportar = function() {
-  var validos = window._mSvcs.filter(function(s){ return s.paisId && s.tarifa; });
-  if (!validos.length) { toast('Completá al menos un servicio con país y tarifa','err'); return; }
-
-  var { jsPDF } = window.jspdf;
-  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-  var W = 210, pad = 18, y = 0;
-
-  // Colores
-  var BG       = '#0e0f0d';
-  var SURFACE  = '#161714';
-  var GOLD     = '#c9a84c';
-  var TEXT     = '#e8e6df';
-  var MUTED    = '#9a9890';
-  var DIM      = '#5c5c57';
-  var BORDER   = '#2e2f2a';
-  var GREEN    = '#6dbb8a';
-
-  function hexToRgb(hex) {
-    var r = parseInt(hex.slice(1,3),16);
-    var g = parseInt(hex.slice(3,5),16);
-    var b = parseInt(hex.slice(5,7),16);
-    return [r,g,b];
-  }
-  function setFill(hex) { var rgb=hexToRgb(hex); doc.setFillColor(rgb[0],rgb[1],rgb[2]); }
-  function setTextColor(hex) { var rgb=hexToRgb(hex); doc.setTextColor(rgb[0],rgb[1],rgb[2]); }
-  function setDrawColor(hex) { var rgb=hexToRgb(hex); doc.setDrawColor(rgb[0],rgb[1],rgb[2]); }
-
-  // Fondo completo
-  setFill(BG);
-  doc.rect(0,0,W,297,'F');
-
-  // Header
-  setFill(SURFACE);
-  doc.rect(0,0,W,36,'F');
-  setFill(GOLD);
-  doc.rect(0,35.5,W,0.8,'F');
-
-  // LexQuote
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(20);
-  setTextColor(GOLD);
-  doc.text('LexQuote', pad, 16);
-
-  // Subtítulo
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7);
-  setTextColor(DIM);
-  doc.text('COTIZADOR', pad, 22);
-
-  // Número cotización y fecha
-  var fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
-  var cotNum = 'COT-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(13);
-  setTextColor(GOLD);
-  doc.text(cotNum, W-pad, 14, {align:'right'});
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8);
-  setTextColor(MUTED);
-  doc.text(fecha, W-pad, 20, {align:'right'});
-  doc.setFontSize(7);
-  setTextColor(DIM);
-  doc.text('FECHA', W-pad, 25, {align:'right'});
-
-  y = 44;
-
-  // Título sección
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7);
-  setTextColor(DIM);
-  doc.text('SERVICIOS COTIZADOS', pad, y);
-  setFill(BORDER);
-  doc.rect(pad, y+1.5, W-pad*2, 0.3, 'F');
-  y += 7;
-
-  var totalG = 0, monedaG = 'USD';
-  var allNotas = [];
-
-  validos.forEach(function(s, idx) {
-    var pais = window._proveedores.find(function(p){ return p.id===s.paisId; });
-    var art  = window._articulos.find(function(a){ return a.id===s.artId; });
-    var m = s.moneda || 'USD'; monedaG = m;
-    var tC = pais&&pais.courier&&pais.courierTarifa, mC = tC?pais.courierTarifa:0;
-    var tP = pais&&pais.poa&&pais.poaTarifa,         mP = tP?pais.poaTarifa:0;
-    var tot = s.tarifa + mC + mP;
-    totalG += tot;
-    if (s.notas) allNotas.push(s.notas);
-
-    // Nombre del país
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(11);
-    setTextColor(GOLD);
-    doc.text(pais ? pais.nombre : '—', pad, y);
-    y += 5;
-
-    // Artículo principal
-    var artNombre = art ? art.nombre : 'Servicio';
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(9);
-    setTextColor(MUTED);
-    doc.text(artNombre, pad+2, y);
-    setTextColor(TEXT);
-    doc.text(fmt(s.tarifa, m), W-pad, y, {align:'right'});
-    setFill(BORDER);
-    doc.rect(pad+2, y+1.5, W-pad*2-2, 0.2, 'F');
-    y += 6;
-
-    // Extras vinculados (otros servicios del mismo país que son esExtra)
-    var vinculados = window._mSvcs.filter(function(x){ return x.linkedTo===s.id && x.tipoExtra==='vinculado' && x.tarifa; });
-    vinculados.forEach(function(v) {
-      var artV = window._articulos.find(function(a){ return a.id===v.artId; });
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(9);
-      setTextColor(MUTED);
-      doc.text(artV ? artV.nombre : 'Artículo vinculado', pad+2, y);
-      setTextColor(TEXT);
-      doc.text(fmt(v.tarifa, m), W-pad, y, {align:'right'});
-      setFill(BORDER);
-      doc.rect(pad+2, y+1.5, W-pad*2-2, 0.2, 'F');
-      totalG += v.tarifa;
-      y += 6;
-    });
-
-    // Courier
-    if (tC) {
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(9);
-      setTextColor(MUTED);
-      doc.text('Courier', pad+2, y);
-      // Badge extra
-      setFill('#1a3a2a');
-      doc.roundedRect(pad+22, y-3.5, 10, 4, 1, 1, 'F');
-      doc.setFontSize(6);
-      setTextColor(GREEN);
-      doc.text('EXTRA', pad+24, y-0.8);
-      doc.setFontSize(9);
-      setTextColor(GREEN);
-      doc.text('+ ' + fmt(mC, m), W-pad, y, {align:'right'});
-      setFill(BORDER);
-      doc.rect(pad+2, y+1.5, W-pad*2-2, 0.2, 'F');
-      y += 6;
-    }
-
-    // PoA
-    if (tP) {
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(9);
-      setTextColor(MUTED);
-      doc.text('Power of Attorney (PoA)', pad+2, y);
-      setFill('#1a3a2a');
-      doc.roundedRect(pad+47, y-3.5, 10, 4, 1, 1, 'F');
-      doc.setFontSize(6);
-      setTextColor(GREEN);
-      doc.text('EXTRA', pad+49, y-0.8);
-      doc.setFontSize(9);
-      setTextColor(GREEN);
-      doc.text('+ ' + fmt(mP, m), W-pad, y, {align:'right'});
-      setFill(BORDER);
-      doc.rect(pad+2, y+1.5, W-pad*2-2, 0.2, 'F');
-      y += 6;
-    }
-
-    // Divisor entre países
-    if (idx < validos.length - 1) {
-      setFill(BORDER);
-      doc.rect(pad, y+1, W-pad*2, 0.5, 'F');
-      y += 8;
-    }
-  });
-
-  y += 6;
-
-  // Notas
-  var notasUnicas = allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
-  if (notasUnicas.length) {
-    setFill('#161714');
-    doc.rect(pad, y, W-pad*2, 2, 'F');
-    setFill(GOLD);
-    doc.rect(pad, y, 0.8, 0, 'F');
-
-    var notasTxt = notasUnicas.join(' ');
-    var lines = doc.splitTextToSize(notasTxt, W-pad*2-12);
-    var notasH = lines.length * 4.5 + 10;
-    setFill(SURFACE);
-    doc.rect(pad, y, W-pad*2, notasH, 'F');
-    setFill(GOLD);
-    doc.rect(pad, y, 0.8, notasH, 'F');
-
-    doc.setFontSize(7);
-    setTextColor(DIM);
-    doc.text('NOTAS', pad+4, y+5);
-    doc.setFontSize(8);
-    setTextColor(MUTED);
-    doc.text(lines, pad+4, y+10);
-    y += notasH + 6;
-  }
-
-  // Total general
-  setFill(SURFACE);
-  doc.rect(pad, y, W-pad*2, 18, 'F');
-  setDrawColor(BORDER);
-  doc.setLineWidth(0.3);
-  doc.rect(pad, y, W-pad*2, 18);
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7);
-  setTextColor(DIM);
-  doc.text('TOTAL GENERAL', pad+6, y+7);
-  doc.setFontSize(8);
-  setTextColor(DIM);
-  doc.text(validos.length + ' país/es · ' + validos.length + ' servicios', pad+6, y+13);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(18);
-  setTextColor(GOLD);
-  doc.text(fmt(totalG, monedaG), W-pad-4, y+12, {align:'right'});
-
-  y += 24;
-
-  // Footer
-  setFill(BORDER);
-  doc.rect(0, 282, W, 0.3, 'F');
-  setFill(SURFACE);
-  doc.rect(0, 282.3, W, 15, 'F');
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(10);
-  setTextColor(GOLD);
-  doc.text('LexQuote', pad, 290);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7);
-  setTextColor(DIM);
-  doc.text('Este documento es una cotización y no constituye una factura.', W-pad, 290, {align:'right'});
-
-  doc.save('LexQuote-Cotizacion-' + Date.now() + '.pdf');
-  toast('PDF generado correctamente');
-};
-
 window.showSection = (function(orig) {
   return function(id, btn) {
     orig(id, btn);
@@ -2629,6 +2602,600 @@ async function impEjecutar() {
     impMostrarStep(4);
     toast('Error en la importación: ' + e.message, 'err');
   }
+}
+
+// ══════════════════════════════════════════
+// CONFIGURACIÓN PDF
+// ══════════════════════════════════════════
+
+var _pdfCfg = { template: 1, color: '#c9a84c' };
+
+function cargarConfigPDF() {
+  try {
+    var s = localStorage.getItem('lexquote_pdf_cfg');
+    if (s) _pdfCfg = JSON.parse(s);
+  } catch(e) {}
+}
+
+window.abrirConfigPDF = function() {
+  cargarConfigPDF();
+  // Marcar template activo
+  [1,2,3].forEach(function(n) {
+    document.getElementById('tpl-card-'+n).classList.toggle('selected', _pdfCfg.template===n);
+  });
+  // Marcar color activo
+  aplicarColorSwatches(_pdfCfg.color);
+  // Actualizar previews con color guardado
+  actualizarPreviewsColor(_pdfCfg.color);
+  document.getElementById('modal-cfg-pdf').classList.add('open');
+};
+
+window.seleccionarTemplate = function(n) {
+  _pdfCfg.template = n;
+  [1,2,3].forEach(function(i) {
+    document.getElementById('tpl-card-'+i).classList.toggle('selected', i===n);
+  });
+};
+
+window.elegirColor = function(hex, el) {
+  _pdfCfg.color = hex;
+  aplicarColorSwatches(hex);
+  actualizarPreviewsColor(hex);
+  document.getElementById('color-custom-input').value = hex;
+  document.getElementById('color-hex-label').textContent = hex;
+};
+
+window.elegirColorCustom = function(hex) {
+  _pdfCfg.color = hex;
+  aplicarColorSwatches(hex);
+  actualizarPreviewsColor(hex);
+  document.getElementById('color-hex-label').textContent = hex;
+};
+
+function aplicarColorSwatches(hex) {
+  document.querySelectorAll('.color-swatch').forEach(function(sw) {
+    sw.classList.toggle('active', sw.dataset.color === hex);
+  });
+}
+
+function actualizarPreviewsColor(hex) {
+  var darkVer = hexDarken(hex, 0.55);   // versión oscura para fondos
+  var alphaVer = hexToRgbA(hex, 0.15);  // para fondos sutiles
+
+  // Template 1 (Classic Dark) — elementos dorados
+  var ids1 = ['t1-accent-bar','t1-logo','t1-num','t1-total-accent','t1-total'];
+  ids1.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'rect') el.setAttribute('fill', hex);
+    else el.setAttribute('fill', hex);
+  });
+
+  // Template 2 (Corporate Light)
+  var t2hdr = document.getElementById('t2-header-bg');
+  var t2side = document.getElementById('t2-side-accent');
+  var t2total = document.getElementById('t2-total-bg');
+  var t2logo = document.getElementById('t2-logo');
+  if (t2hdr) t2hdr.setAttribute('fill', hex);
+  if (t2side) t2side.setAttribute('fill', hex);
+  if (t2total) t2total.setAttribute('fill', hex);
+  if (t2logo) t2logo.setAttribute('fill', '#fff');
+  // Update gold colored texts in svg-2
+  var svg2 = document.getElementById('tpl-svg-2');
+  if (svg2) {
+    svg2.querySelectorAll('text').forEach(function(t) {
+      if (t.getAttribute('fill') === '#c9a84c' || t.dataset.colorized) {
+        t.setAttribute('fill', hex);
+        t.dataset.colorized = '1';
+      }
+    });
+  }
+
+  // Template 3 (Bold Modern)
+  var t3block = document.getElementById('t3-left-block');
+  if (t3block) t3block.setAttribute('fill', hex);
+  var svg3 = document.getElementById('tpl-svg-3');
+  if (svg3) {
+    svg3.querySelectorAll('text').forEach(function(t) {
+      if (t.getAttribute('fill') === '#c9a84c' || t.dataset.colorized) {
+        t.setAttribute('fill', hex);
+        t.dataset.colorized = '1';
+      }
+    });
+  }
+}
+
+function hexDarken(hex, amount) {
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return '#'+[r,g,b].map(function(c){ return Math.round(c*amount).toString(16).padStart(2,'0'); }).join('');
+}
+
+function hexToRgbA(hex, alpha) {
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+alpha+')';
+}
+
+window.guardarConfigPDF = function() {
+  localStorage.setItem('lexquote_pdf_cfg', JSON.stringify(_pdfCfg));
+  cerrarModal('modal-cfg-pdf');
+  toast('Configuración PDF guardada', 'ok');
+};
+
+// Inicializar al cargar
+cargarConfigPDF();
+
+// ══════════════════════════════════════════
+// HELPERS DE COLOR PARA JSPDF
+// ══════════════════════════════════════════
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+}
+
+// ══════════════════════════════════════════
+// MOTOR DE EXPORTACIÓN PDF — MULTI-TEMPLATE
+// ══════════════════════════════════════════
+
+window.mExportar = function() {
+  var validos = window._mSvcs.filter(function(s){ return s.paisId && s.tarifa; });
+  if (!validos.length) { toast('Completá al menos un servicio con país y tarifa','err'); return; }
+
+  cargarConfigPDF();
+  var tpl = _pdfCfg.template || 1;
+  var ACCENT = _pdfCfg.color || '#c9a84c';
+
+  var { jsPDF } = window.jspdf;
+
+  if (tpl === 1) exportarTpl1(validos, ACCENT);
+  else if (tpl === 2) exportarTpl2(validos, ACCENT);
+  else if (tpl === 3) exportarTpl3(validos, ACCENT);
+};
+
+// ─── TEMPLATE 1: Classic Dark ─────────────────────────
+function exportarTpl1(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=18;
+
+  var BG='#0e0f0d', SURFACE='#161714', SURFACE2='#1e1f1c', TEXT='#e8e6df', MUTED='#9a9890', DIM='#5c5c57', BORDER='#2e2f2a', GREEN='#6dbb8a';
+
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  function setD(h){ var c=rgb(h); doc.setDrawColor(c[0],c[1],c[2]); }
+
+  // Fondo
+  setF(BG); doc.rect(0,0,W,297,'F');
+
+  // Header
+  setF(SURFACE); doc.rect(0,0,W,38,'F');
+  setF(ACCENT); doc.rect(0,37.4,W,1,'F');
+
+  // Logo
+  doc.setFont('helvetica','bold'); doc.setFontSize(22); setT(ACCENT);
+  doc.text('LexQuote', pad, 17);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+  doc.text('COTIZADOR PROFESIONAL', pad, 24);
+
+  // Número y fecha
+  var fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum = 'COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); setT(ACCENT);
+  doc.text(cotNum, W-pad, 15, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED);
+  doc.text(fecha, W-pad, 22, {align:'right'});
+  doc.setFontSize(6); setT(DIM);
+  doc.text('FECHA DE EMISIÓN', W-pad, 28, {align:'right'});
+
+  var y = 48;
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+  doc.text('SERVICIOS COTIZADOS', pad, y);
+  setF(BORDER); doc.rect(pad, y+1.5, W-pad*2, 0.3, 'F');
+  y += 8;
+
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[];
+
+  validos.forEach(function(s, idx) {
+    var pais = window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art  = window._articulos.find(function(a){ return a.id===s.artId; });
+    var m = s.moneda||'USD'; monedaG=m;
+
+    // Nombre país
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT);
+    doc.text(pais ? pais.nombre : '—', pad, y); y+=5;
+
+    // Artículo principal
+    var artNombre = art ? art.nombre : 'Servicio';
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
+    doc.text(artNombre, pad+3, y); setT(TEXT);
+    doc.text(fmt(s.tarifa,m), W-pad, y, {align:'right'});
+    setF(BORDER); doc.rect(pad+3, y+1.5, W-pad*2-3, 0.18, 'F');
+    totalG+=s.tarifa; costoG+=s.costo; y+=6;
+
+    // Vinculados
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
+      doc.text('  ↳ '+(artV?artV.nombre:'Artículo vinculado'), pad+3, y); setT(TEXT);
+      doc.text(fmt(v.tarifa,m), W-pad, y, {align:'right'});
+      setF(BORDER); doc.rect(pad+3,y+1.5,W-pad*2-3,0.18,'F');
+      totalG+=v.tarifa; costoG+=v.costo||0; y+=6;
+    });
+
+    // Courier
+    if (pais&&pais.courier&&pais.courierTarifa) {
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
+      doc.text('Courier', pad+3, y);
+      var gc=hexToRgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
+      doc.text('+ '+fmt(pais.courierTarifa,m), W-pad, y, {align:'right'});
+      setF(BORDER); doc.rect(pad+3,y+1.5,W-pad*2-3,0.18,'F');
+      totalG+=pais.courierTarifa; y+=6;
+    }
+    // PoA
+    if (pais&&pais.poa&&pais.poaTarifa) {
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
+      doc.text('Power of Attorney (PoA)', pad+3, y);
+      var gc=hexToRgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
+      doc.text('+ '+fmt(pais.poaTarifa,m), W-pad, y, {align:'right'});
+      setF(BORDER); doc.rect(pad+3,y+1.5,W-pad*2-3,0.18,'F');
+      totalG+=pais.poaTarifa; y+=6;
+    }
+
+    if (s.notas) allNotas.push(s.notas);
+    if (idx < validos.length-1) { setF(BORDER); doc.rect(pad,y+1,W-pad*2,0.6,'F'); y+=8; }
+  });
+
+  y+=8;
+
+  // Notas
+  var notasUnicas = allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if (notasUnicas.length) {
+    var notasTxt = notasUnicas.join(' ');
+    var lines = doc.splitTextToSize(notasTxt, W-pad*2-12);
+    var notasH = lines.length*4.8+12;
+    setF(SURFACE); doc.rect(pad,y,W-pad*2,notasH,'F');
+    var ac=hexToRgb(ACCENT); doc.setFillColor(ac[0],ac[1],ac[2]); doc.rect(pad,y,1,notasH,'F');
+    doc.setFontSize(6.5); setT(DIM); doc.text('NOTAS', pad+5, y+6);
+    doc.setFontSize(8); setT(MUTED); doc.text(lines, pad+5, y+11);
+    y+=notasH+8;
+  }
+
+  // Total box
+  setF(SURFACE2); doc.rect(pad,y,W-pad*2,20,'F');
+  var ac2=hexToRgb(ACCENT); doc.setFillColor(ac2[0],ac2[1],ac2[2]); doc.rect(pad,y,1.5,20,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+  doc.text('TOTAL GENERAL', pad+6, y+8);
+  doc.setFontSize(8); setT(MUTED);
+  doc.text(validos.length+' país/es · '+validos.length+' servicio/s', pad+6, y+14);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT);
+  doc.text(fmt(totalG,monedaG), W-pad-4, y+14, {align:'right'});
+
+  // Margen
+  if (costoG>0) {
+    var dif=totalG-costoG, pct=(dif/costoG)*100;
+    var mc=hexToRgb(dif>=0?GREEN:'#d4695a'); doc.setTextColor(mc[0],mc[1],mc[2]);
+    doc.setFontSize(7);
+    doc.text((pct>=0?'+':'')+pct.toFixed(1)+'% margen', W-pad-4, y+20, {align:'right'});
+  }
+
+  y+=28;
+
+  // Footer
+  setF(BORDER); doc.rect(0,280,W,0.4,'F');
+  setF(SURFACE); doc.rect(0,280.4,W,17,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
+  doc.text('LexQuote', pad, 289);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+  doc.text('Este documento es una cotización y no constituye una factura.', W-pad, 289, {align:'right'});
+
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Classic Dark generado ✓');
+}
+
+// ─── TEMPLATE 2: Corporate Light ──────────────────────
+function exportarTpl2(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=16;
+
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  function setD(h){ var c=rgb(h); doc.setDrawColor(c[0],c[1],c[2]); }
+
+  var BG='#f8f7f4', DARK='#1a1a18', MID='#555550', LIGHT='#9a9890', LINE='#dedcd5', GREEN='#1a7a4a';
+
+  // Fondo
+  setF(BG); doc.rect(0,0,W,297,'F');
+
+  // Header accent bar (full color)
+  setF(ACCENT); doc.rect(0,0,W,34,'F');
+
+  // Logo en header
+  doc.setFont('helvetica','bold'); doc.setFontSize(22);
+  doc.setTextColor(255,255,255);
+  doc.text('LexQuote', pad+6, 16);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  doc.setTextColor(255,255,255,150);
+  doc.text('COTIZADOR PROFESIONAL', pad+6, 24);
+
+  // COT y fecha en header
+  var fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum = 'COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.setTextColor(255,255,255);
+  doc.text(cotNum, W-pad, 14, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+  doc.setTextColor(255,255,255);
+  doc.text(fecha, W-pad, 22, {align:'right'});
+
+  // Línea lateral izquierda
+  setF(ACCENT); doc.rect(0,34,4,263,'F');
+
+  var y=44;
+
+  // Tabla header
+  setF('#ede9df'); doc.rect(pad,y,W-pad-8,10,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(LIGHT);
+  doc.text('SERVICIO / PAÍS', pad+5, y+7);
+  doc.text('TARIFA', W-pad-12, y+7, {align:'right'});
+  y+=10;
+
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[];
+
+  validos.forEach(function(s, idx) {
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+    var rowBg = idx%2===0?'#f8f7f4':'#f1efe9';
+
+    // Fila país
+    setF(rowBg); doc.rect(pad,y,W-pad-8,10,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(DARK);
+    doc.text(pais?pais.nombre:'—', pad+5, y+7);
+    doc.setFont('helvetica','normal'); setT(MID);
+    doc.text(art?art.nombre:'Servicio', pad+42, y+7);
+    doc.setFont('helvetica','bold'); setT(DARK);
+    doc.text(fmt(s.tarifa,m), W-pad-12, y+7, {align:'right'});
+    setD(LINE); doc.setLineWidth(0.3); doc.line(pad,y+10,W-pad-8,y+10);
+    totalG+=s.tarifa; costoG+=s.costo; y+=10;
+
+    // Vinculados
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
+      doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), pad+5, y+6.5);
+      doc.text(fmt(v.tarifa,m), W-pad-12, y+6.5, {align:'right'});
+      setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
+      totalG+=v.tarifa; y+=9;
+    });
+
+    // Courier
+    if (pais&&pais.courier&&pais.courierTarifa) {
+      setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
+      doc.text('  + Courier', pad+5, y+6.5);
+      var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
+      doc.text(fmt(pais.courierTarifa,m), W-pad-12, y+6.5, {align:'right'});
+      setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
+      totalG+=pais.courierTarifa; y+=9;
+    }
+    if (pais&&pais.poa&&pais.poaTarifa) {
+      setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
+      doc.text('  + Power of Attorney (PoA)', pad+5, y+6.5);
+      var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
+      doc.text(fmt(pais.poaTarifa,m), W-pad-12, y+6.5, {align:'right'});
+      setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
+      totalG+=pais.poaTarifa; y+=9;
+    }
+
+    if (s.notas) allNotas.push(s.notas);
+    y+=2;
+  });
+
+  y+=6;
+
+  // Notas
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if (notasUnicas.length) {
+    var notasTxt=notasUnicas.join(' ');
+    var lines=doc.splitTextToSize(notasTxt,W-pad*2-8);
+    var notasH=lines.length*5+12;
+    setF('#ede9df'); doc.rect(pad,y,W-pad-8,notasH,'F');
+    setF(ACCENT); doc.rect(pad,y,1.5,notasH,'F');
+    doc.setFontSize(6.5); setT(LIGHT); doc.text('NOTAS', pad+5, y+6);
+    doc.setFontSize(8); setT(MID); doc.text(lines,pad+5,y+11);
+    y+=notasH+8;
+  }
+
+  // Total
+  setF(ACCENT); doc.rect(pad,y,W-pad-8,20,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  doc.setTextColor(255,255,255);
+  doc.text('TOTAL GENERAL', pad+6, y+8);
+  doc.setFontSize(7.5); doc.text(validos.length+' país/es', pad+6, y+14);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18);
+  doc.text(fmt(totalG,monedaG), W-pad-12, y+14, {align:'right'});
+  y+=28;
+
+  // Footer
+  setD(LINE); doc.setLineWidth(0.4); doc.line(pad, 280, W-pad, 280);
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT);
+  doc.text('LexQuote', pad, 288);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(LIGHT);
+  doc.text('Este documento es una cotización y no constituye una factura.', W-pad, 288, {align:'right'});
+
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Corporate Light generado ✓');
+}
+
+// ─── TEMPLATE 3: Bold Modern ──────────────────────────
+function exportarTpl3(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=18;
+  var SIDEBAR=54;
+
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  function setD(h){ var c=rgb(h); doc.setDrawColor(c[0],c[1],c[2]); }
+
+  var BG='#111213', SURFACE='#161714', SURFACE2='#1e1f1c', TEXT='#e8e6df', MUTED='#9a9890', DIM='#5c5c57', BORDER='#2e2f2a', GREEN='#6dbb8a';
+  var contentX = SIDEBAR+10, contentW = W-SIDEBAR-pad;
+
+  // Fondo
+  setF(BG); doc.rect(0,0,W,297,'F');
+
+  // Sidebar bloque de color
+  setF(ACCENT); doc.rect(0,0,SIDEBAR,297,'F');
+
+  // Texto vertical en sidebar (rotado)
+  doc.setFont('helvetica','normal'); doc.setFontSize(5);
+  var ac=rgb(ACCENT);
+  // Usar color oscuro para contrastar con el accent
+  var luma = 0.299*ac[0]+0.587*ac[1]+0.114*ac[2];
+  var textOnAccent = luma>128 ? '#0e0f0d' : '#ffffff';
+  setT(textOnAccent);
+
+  // Logo vertical en sidebar
+  doc.setFont('helvetica','bold'); doc.setFontSize(28);
+  setT(textOnAccent);
+  doc.text('L', SIDEBAR/2, 48, {align:'center'});
+  doc.text('Q', SIDEBAR/2, 64, {align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(5.5);
+  doc.text('LEX', SIDEBAR/2, 76, {align:'center'});
+  doc.text('QUOTE', SIDEBAR/2, 82, {align:'center'});
+
+  // Línea decorativa sidebar
+  var textOnAccentRgb = rgb(textOnAccent);
+  doc.setFillColor(textOnAccentRgb[0],textOnAccentRgb[1],textOnAccentRgb[2],50);
+  doc.rect(SIDEBAR/2-12, 88, 24, 0.5, 'F');
+
+  // Número cotización en sidebar (vertical)
+  doc.setFont('helvetica','normal'); doc.setFontSize(5); setT(textOnAccent);
+  doc.text('COTIZACIÓN', SIDEBAR/2, 220, {align:'center'});
+
+  // Header content area
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(TEXT);
+  doc.text('LexQuote', contentX, 18);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+  doc.text('COTIZACIÓN', contentX, 25);
+
+  // COT y fecha
+  var fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum = 'COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); setT(ACCENT);
+  doc.text(cotNum, W-pad, 14, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED);
+  doc.text(fecha, W-pad, 21, {align:'right'});
+
+  setF(BORDER); doc.rect(contentX,28,contentW,0.6,'F');
+
+  var y=36;
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+  doc.text('SERVICIOS', contentX, y);
+  y+=6;
+
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[];
+
+  validos.forEach(function(s, idx) {
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+
+    // Fila país — alternada
+    var rowBg=idx%2===0?SURFACE:SURFACE2;
+    setF(rowBg); doc.rect(contentX,y,contentW,12,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
+    doc.text(pais?pais.nombre:'—', contentX+4, y+5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
+    doc.text(art?art.nombre:'Servicio', contentX+4, y+10);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(TEXT);
+    doc.text(fmt(s.tarifa,m), W-pad, y+8, {align:'right'});
+    setF(BORDER); doc.rect(contentX,y+12,contentW,0.3,'F');
+    totalG+=s.tarifa; costoG+=s.costo; y+=13;
+
+    // Vinculados
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      setF(BG); doc.rect(contentX,y,contentW,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
+      doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), contentX+4, y+7);
+      setT(TEXT); doc.text(fmt(v.tarifa,m), W-pad, y+7, {align:'right'});
+      setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
+      totalG+=v.tarifa; y+=11;
+    });
+
+    // Courier / PoA
+    if (pais&&pais.courier&&pais.courierTarifa) {
+      setF(BG); doc.rect(contentX,y,contentW,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
+      doc.text('  + Courier', contentX+4, y+7);
+      var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
+      doc.text(fmt(pais.courierTarifa,m), W-pad, y+7, {align:'right'});
+      setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
+      totalG+=pais.courierTarifa; y+=11;
+    }
+    if (pais&&pais.poa&&pais.poaTarifa) {
+      setF(BG); doc.rect(contentX,y,contentW,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
+      doc.text('  + Power of Attorney (PoA)', contentX+4, y+7);
+      var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
+      doc.text(fmt(pais.poaTarifa,m), W-pad, y+7, {align:'right'});
+      setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
+      totalG+=pais.poaTarifa; y+=11;
+    }
+
+    if (s.notas) allNotas.push(s.notas);
+    y+=3;
+  });
+
+  y+=4;
+
+  // Notas
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if (notasUnicas.length) {
+    var notasTxt=notasUnicas.join(' ');
+    var lines=doc.splitTextToSize(notasTxt,contentW-8);
+    var notasH=lines.length*5+12;
+    setF(SURFACE); doc.rect(contentX,y,contentW,notasH,'F');
+    setF(ACCENT); doc.rect(contentX,y,1.5,notasH,'F');
+    doc.setFontSize(6.5); setT(DIM); doc.text('NOTAS', contentX+5, y+6);
+    doc.setFontSize(8); setT(MUTED); doc.text(lines,contentX+5,y+11);
+    y+=notasH+8;
+  }
+
+  // Total box
+  setF(SURFACE2); doc.rect(contentX,y,contentW,22,'F');
+  setF(ACCENT); doc.rect(contentX,y,2,22,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+  doc.text('TOTAL GENERAL', contentX+6, y+8);
+  doc.setFontSize(8); setT(MUTED);
+  doc.text(validos.length+' país/es · '+validos.length+' servicio/s', contentX+6, y+15);
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); setT(ACCENT);
+  doc.text(fmt(totalG,monedaG), W-pad, y+16, {align:'right'});
+
+  // Margen
+  if (costoG>0) {
+    var dif=totalG-costoG, pct=(dif/costoG)*100;
+    var mc=rgb(dif>=0?GREEN:'#d4695a'); doc.setTextColor(mc[0],mc[1],mc[2]);
+    doc.setFontSize(7);
+    doc.text((pct>=0?'+':'')+pct.toFixed(1)+'% margen', W-pad, y+22, {align:'right'});
+  }
+
+  y+=30;
+
+  // Footer
+  setF(BORDER); doc.rect(contentX,278,contentW,0.4,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
+  doc.text('LexQuote', contentX, 286);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+  doc.text('Cotización · No constituye factura.', W-pad, 286, {align:'right'});
+
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Bold Modern generado ✓');
 }
 
 // ── Registrar nav buttons con JS (evita ReferenceError por timing de módulo) ──
