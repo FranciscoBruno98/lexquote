@@ -1185,12 +1185,7 @@ window.abrirModalAgente = (id) => {
     lista.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Primero cargá artículos</div>`;
   } else {
     lista.innerHTML =
-      `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;padding:5px 0 8px;border-bottom:1px solid var(--border2);">
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Tasa</div>
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Honorario</div>
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Total Costo</div>
-        <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">Nuestra Tarifa</div>
-      </div>` +
+      '' +
       window._articulos.map(a => {
         const tRaw = tarifas[a.id];
         const tasa = (tRaw && typeof tRaw === 'object') ? (tRaw.tasa ?? '') : '';
@@ -1200,8 +1195,14 @@ window.abrirModalAgente = (id) => {
         return `
       <div style="padding:10px 0;border-bottom:1px solid var(--border);">
         <div style="margin-bottom:6px;">
-          <span style="font-size:12px;font-weight:500;">${esc(a.nombre)}</span>
-          <span style="font-size:10px;color:var(--gold);letter-spacing:0.06em;margin-left:8px;">${esc(a.codigo)}</span>
+          <span style="font-size:10px;color:var(--gold);letter-spacing:0.06em;font-family:var(--mono);">${esc(a.codigo)}</span>
+          <span style="font-size:12px;font-weight:500;margin-left:8px;">${esc(a.nombre)}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:4px;">
+          <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Tasa</div>
+          <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Honorario</div>
+          <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Total Costo</div>
+          <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">Nuestra Tarifa</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
           <div class="input-group">
