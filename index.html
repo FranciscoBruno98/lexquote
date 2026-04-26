@@ -801,8 +801,23 @@
   .color-custom-wrap label { font-size:10px; color:var(--text3); letter-spacing:0.08em; text-transform:uppercase; }
   input[type="color"].color-picker-input { width:36px; height:36px; padding:2px; border:1px solid var(--border2); border-radius:6px; background:var(--surface3); cursor:pointer; }
 
-  /* Preview label section */
-  .cfg-pdf-footer { padding:14px 26px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; background:var(--surface2); border-radius:0 0 16px 16px; }
+  /* Tab panels */
+  .cfg-tab-panel { display:none; }
+  .cfg-tab-panel.active { display:block; }
+
+  /* Empresa form */
+  .empresa-form { display:flex; flex-direction:column; gap:16px; }
+  .empresa-field { display:flex; flex-direction:column; gap:5px; }
+  .empresa-field label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text3); }
+  .empresa-field input, .empresa-field textarea { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:'DM Mono',monospace; font-size:12px; padding:9px 12px; outline:none; transition:border-color 0.15s; width:100%; }
+  .empresa-field input:focus, .empresa-field textarea:focus { border-color:var(--gold); background:var(--surface3); }
+  .empresa-field input::placeholder { color:var(--text3); }
+  .empresa-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .empresa-preview-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-top:4px; }
+  .empresa-preview-title { font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
+  .empresa-preview-name { font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--gold); line-height:1.1; }
+  .empresa-preview-sub { font-size:11px; color:var(--text2); margin-top:3px; }
+  .empresa-preview-contact { font-size:10px; color:var(--text3); margin-top:8px; display:flex; flex-direction:column; gap:2px; }
 </style>
 
 <div class="cfg-pdf-overlay" id="modal-cfg-pdf">
@@ -812,9 +827,13 @@
       <button class="modal-close" onclick="cerrarModal('modal-cfg-pdf')">✕</button>
     </div>
     <div class="cfg-pdf-tabs">
-      <button class="cfg-pdf-tab active" data-cfgtab="pdf">PDF Exportable</button>
+      <button class="cfg-pdf-tab active" id="cfgtab-pdf" onclick="switchCfgTab('pdf')">PDF Exportable</button>
+      <button class="cfg-pdf-tab" id="cfgtab-empresa" onclick="switchCfgTab('empresa')">◉ Mi Empresa</button>
     </div>
     <div class="cfg-pdf-body">
+
+      <!-- TAB: PDF Exportable -->
+      <div class="cfg-tab-panel active" id="cfgpanel-pdf">
 
       <div class="cfg-section-label">Elegí un template para tus cotizaciones</div>
 
@@ -964,6 +983,65 @@
         Las previsualizaciones de arriba se actualizan en tiempo real con el color que elegís.
         Al exportar, el PDF usará el template y color guardados.
       </div>
+
+      </div><!-- /cfgpanel-pdf -->
+
+      <!-- TAB: Mi Empresa -->
+      <div class="cfg-tab-panel" id="cfgpanel-empresa">
+        <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:20px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);border-left:2px solid var(--gold);">
+          Estos datos aparecerán en el encabezado del PDF como la <strong style="color:var(--gold);">identidad de tu empresa</strong>. 
+          Tu cliente verá el nombre de tu estudio — no el de LexQuote.
+        </div>
+
+        <div class="empresa-form">
+          <div class="empresa-field">
+            <label>Nombre de la empresa / estudio *</label>
+            <input type="text" id="emp-nombre" placeholder="Ej: García & Asociados IP, Smith Law Firm..." oninput="actualizarPreviewEmpresa()">
+          </div>
+          <div class="empresa-field">
+            <label>Subtítulo / especialidad</label>
+            <input type="text" id="emp-subtitulo" placeholder="Ej: Propiedad Intelectual · Marcas & Patentes" oninput="actualizarPreviewEmpresa()">
+          </div>
+          <div class="empresa-grid">
+            <div class="empresa-field">
+              <label>Email de contacto</label>
+              <input type="text" id="emp-email" placeholder="contacto@estudio.com" oninput="actualizarPreviewEmpresa()">
+            </div>
+            <div class="empresa-field">
+              <label>Teléfono</label>
+              <input type="text" id="emp-telefono" placeholder="+54 11 1234-5678" oninput="actualizarPreviewEmpresa()">
+            </div>
+          </div>
+          <div class="empresa-grid">
+            <div class="empresa-field">
+              <label>Sitio web</label>
+              <input type="text" id="emp-web" placeholder="www.estudio.com" oninput="actualizarPreviewEmpresa()">
+            </div>
+            <div class="empresa-field">
+              <label>Ciudad / País</label>
+              <input type="text" id="emp-ciudad" placeholder="Buenos Aires, Argentina" oninput="actualizarPreviewEmpresa()">
+            </div>
+          </div>
+          <div class="empresa-field">
+            <label>Texto legal (pie de página)</label>
+            <input type="text" id="emp-legal" placeholder="Ej: Este documento es una cotización y no constituye una factura." oninput="actualizarPreviewEmpresa()">
+          </div>
+
+          <!-- Preview en vivo -->
+          <div class="empresa-preview-box">
+            <div class="empresa-preview-title">Vista previa del encabezado</div>
+            <div class="empresa-preview-name" id="eprev-nombre">Tu Empresa</div>
+            <div class="empresa-preview-sub" id="eprev-sub">Especialidad · Rubro</div>
+            <div class="empresa-preview-contact">
+              <span id="eprev-email" style="display:none;"></span>
+              <span id="eprev-tel" style="display:none;"></span>
+              <span id="eprev-web" style="display:none;"></span>
+              <span id="eprev-ciudad" style="display:none;"></span>
+            </div>
+          </div>
+        </div>
+      </div><!-- /cfgpanel-empresa -->
+
     </div>
     <div class="cfg-pdf-footer">
       <button class="btn btn-ghost" onclick="cerrarModal('modal-cfg-pdf')">Cancelar</button>
@@ -2608,14 +2686,47 @@ async function impEjecutar() {
 // CONFIGURACIÓN PDF
 // ══════════════════════════════════════════
 
-var _pdfCfg = { template: 1, color: '#c9a84c' };
+var _pdfCfg = { template: 1, color: '#c9a84c', empresa: { nombre:'', subtitulo:'', email:'', telefono:'', web:'', ciudad:'', legal:'' } };
 
 function cargarConfigPDF() {
   try {
     var s = localStorage.getItem('lexquote_pdf_cfg');
-    if (s) _pdfCfg = JSON.parse(s);
+    if (s) {
+      var parsed = JSON.parse(s);
+      _pdfCfg = Object.assign({ template:1, color:'#c9a84c', empresa:{} }, parsed);
+      if (!_pdfCfg.empresa) _pdfCfg.empresa = {};
+    }
   } catch(e) {}
 }
+
+window.switchCfgTab = function(tab) {
+  ['pdf','empresa'].forEach(function(t) {
+    document.getElementById('cfgtab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('cfgpanel-'+t).classList.toggle('active', t===tab);
+  });
+};
+
+window.actualizarPreviewEmpresa = function() {
+  var nombre = document.getElementById('emp-nombre').value || 'Tu Empresa';
+  var sub    = document.getElementById('emp-subtitulo').value || 'Especialidad · Rubro';
+  var email  = document.getElementById('emp-email').value;
+  var tel    = document.getElementById('emp-telefono').value;
+  var web    = document.getElementById('emp-web').value;
+  var ciudad = document.getElementById('emp-ciudad').value;
+
+  document.getElementById('eprev-nombre').textContent = nombre;
+  document.getElementById('eprev-sub').textContent = sub;
+
+  function setContact(id, val, prefix) {
+    var el = document.getElementById(id);
+    el.textContent = val ? (prefix ? prefix+' '+val : val) : '';
+    el.style.display = val ? '' : 'none';
+  }
+  setContact('eprev-email', email, '✉');
+  setContact('eprev-tel',   tel,   '☎');
+  setContact('eprev-web',   web,   '⌂');
+  setContact('eprev-ciudad',ciudad, '⊙');
+};
 
 window.abrirConfigPDF = function() {
   cargarConfigPDF();
@@ -2625,8 +2736,16 @@ window.abrirConfigPDF = function() {
   });
   // Marcar color activo
   aplicarColorSwatches(_pdfCfg.color);
-  // Actualizar previews con color guardado
   actualizarPreviewsColor(_pdfCfg.color);
+  // Poblar campos empresa
+  var e = _pdfCfg.empresa || {};
+  ['nombre','subtitulo','email','telefono','web','ciudad','legal'].forEach(function(k) {
+    var el = document.getElementById('emp-'+k);
+    if (el) el.value = e[k] || '';
+  });
+  actualizarPreviewEmpresa();
+  // Resetear tab a PDF
+  switchCfgTab('pdf');
   document.getElementById('modal-cfg-pdf').classList.add('open');
 };
 
@@ -2716,9 +2835,19 @@ function hexToRgbA(hex, alpha) {
 }
 
 window.guardarConfigPDF = function() {
+  // Guardar datos empresa
+  _pdfCfg.empresa = {
+    nombre:   document.getElementById('emp-nombre').value.trim(),
+    subtitulo:document.getElementById('emp-subtitulo').value.trim(),
+    email:    document.getElementById('emp-email').value.trim(),
+    telefono: document.getElementById('emp-telefono').value.trim(),
+    web:      document.getElementById('emp-web').value.trim(),
+    ciudad:   document.getElementById('emp-ciudad').value.trim(),
+    legal:    document.getElementById('emp-legal').value.trim(),
+  };
   localStorage.setItem('lexquote_pdf_cfg', JSON.stringify(_pdfCfg));
   cerrarModal('modal-cfg-pdf');
-  toast('Configuración PDF guardada', 'ok');
+  toast('Configuración guardada', 'ok');
 };
 
 // Inicializar al cargar
@@ -2755,6 +2884,14 @@ function exportarTpl1(validos, ACCENT) {
   var { jsPDF } = window.jspdf;
   var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   var W=210, pad=18;
+  var emp = (_pdfCfg.empresa) || {};
+  var empNombre   = emp.nombre   || 'Mi Empresa';
+  var empSub      = emp.subtitulo|| '';
+  var empEmail    = emp.email    || '';
+  var empTel      = emp.telefono || '';
+  var empWeb      = emp.web      || '';
+  var empCiudad   = emp.ciudad   || '';
+  var empLegal    = emp.legal    || 'Este documento es una cotización y no constituye una factura.';
 
   var BG='#0e0f0d', SURFACE='#161714', SURFACE2='#1e1f1c', TEXT='#e8e6df', MUTED='#9a9890', DIM='#5c5c57', BORDER='#2e2f2a', GREEN='#6dbb8a';
 
@@ -2766,27 +2903,49 @@ function exportarTpl1(validos, ACCENT) {
   // Fondo
   setF(BG); doc.rect(0,0,W,297,'F');
 
-  // Header
-  setF(SURFACE); doc.rect(0,0,W,38,'F');
-  setF(ACCENT); doc.rect(0,37.4,W,1,'F');
+  // Header — altura dinámica según cuánto contact info hay
+  var hasContact = empEmail||empTel||empWeb||empCiudad;
+  var headerH = hasContact ? 48 : 38;
+  setF(SURFACE); doc.rect(0,0,W,headerH,'F');
+  setF(ACCENT); doc.rect(0,headerH-0.6,W,1,'F');
 
-  // Logo
-  doc.setFont('helvetica','bold'); doc.setFontSize(22); setT(ACCENT);
-  doc.text('LexQuote', pad, 17);
-  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
-  doc.text('COTIZADOR PROFESIONAL', pad, 24);
+  // Nombre empresa (protagonista)
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); setT(ACCENT);
+  doc.text(empNombre, pad, 15);
+  var yH = 15;
 
-  // Número y fecha
+  // Subtítulo
+  if (empSub) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED);
+    doc.text(empSub, pad, 22); yH = 22;
+  }
+
+  // Datos de contacto en una línea
+  if (hasContact) {
+    var contactParts = [];
+    if (empEmail)  contactParts.push(empEmail);
+    if (empTel)    contactParts.push(empTel);
+    if (empWeb)    contactParts.push(empWeb);
+    if (empCiudad) contactParts.push(empCiudad);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
+    doc.text(contactParts.join('  ·  '), pad, (empSub ? 29 : 22));
+  }
+
+  // Número y fecha (derecha del header)
   var fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
   var cotNum = 'COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
   doc.setFont('helvetica','bold'); doc.setFontSize(12); setT(ACCENT);
-  doc.text(cotNum, W-pad, 15, {align:'right'});
+  doc.text(cotNum, W-pad, 13, {align:'right'});
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED);
-  doc.text(fecha, W-pad, 22, {align:'right'});
+  doc.text(fecha, W-pad, 20, {align:'right'});
   doc.setFontSize(6); setT(DIM);
-  doc.text('FECHA DE EMISIÓN', W-pad, 28, {align:'right'});
+  doc.text('COTIZACIÓN', W-pad, 26, {align:'right'});
 
-  var y = 48;
+  // Powered by (discreto, muy pequeño)
+  doc.setFont('helvetica','normal'); doc.setFontSize(5); setT('#2a2b26');
+  doc.text('generado con LexQuote', W-pad, headerH-3, {align:'right'});
+
+  var y = headerH + 10;
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
   doc.text('SERVICIOS COTIZADOS', pad, y);
   setF(BORDER); doc.rect(pad, y+1.5, W-pad*2, 0.3, 'F');
@@ -2883,9 +3042,12 @@ function exportarTpl1(validos, ACCENT) {
   setF(BORDER); doc.rect(0,280,W,0.4,'F');
   setF(SURFACE); doc.rect(0,280.4,W,17,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
-  doc.text('LexQuote', pad, 289);
+  doc.text(empNombre, pad, 289);
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
-  doc.text('Este documento es una cotización y no constituye una factura.', W-pad, 289, {align:'right'});
+  doc.text(empLegal, W-pad, 289, {align:'right'});
+  // LexQuote branding — muy discreto
+  doc.setFontSize(5); setT('#222320');
+  doc.text('generado con LexQuote', pad, 294);
 
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Classic Dark generado ✓');
@@ -2896,6 +3058,14 @@ function exportarTpl2(validos, ACCENT) {
   var { jsPDF } = window.jspdf;
   var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   var W=210, pad=16;
+  var emp = (_pdfCfg.empresa) || {};
+  var empNombre   = emp.nombre   || 'Mi Empresa';
+  var empSub      = emp.subtitulo|| '';
+  var empEmail    = emp.email    || '';
+  var empTel      = emp.telefono || '';
+  var empWeb      = emp.web      || '';
+  var empCiudad   = emp.ciudad   || '';
+  var empLegal    = emp.legal    || 'Este documento es una cotización y no constituye una factura.';
 
   function rgb(h){ return hexToRgb(h); }
   function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
@@ -2907,31 +3077,54 @@ function exportarTpl2(validos, ACCENT) {
   // Fondo
   setF(BG); doc.rect(0,0,W,297,'F');
 
-  // Header accent bar (full color)
-  setF(ACCENT); doc.rect(0,0,W,34,'F');
+  // Header accent bar — altura dinámica
+  var hasContact = empEmail||empTel||empWeb||empCiudad;
+  var headerH = hasContact ? 42 : 34;
+  setF(ACCENT); doc.rect(0,0,W,headerH,'F');
 
-  // Logo en header
-  doc.setFont('helvetica','bold'); doc.setFontSize(22);
+  // Nombre empresa (protagonista, blanco sobre color)
+  doc.setFont('helvetica','bold'); doc.setFontSize(20);
   doc.setTextColor(255,255,255);
-  doc.text('LexQuote', pad+6, 16);
-  doc.setFont('helvetica','normal'); doc.setFontSize(7);
-  doc.setTextColor(255,255,255,150);
-  doc.text('COTIZADOR PROFESIONAL', pad+6, 24);
+  doc.text(empNombre, pad+6, 14);
 
-  // COT y fecha en header
+  // Subtítulo
+  var yH = 14;
+  if (empSub) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    doc.setTextColor(255,255,255);
+    doc.text(empSub, pad+6, 21); yH = 21;
+  }
+
+  // Contacto en una línea
+  if (hasContact) {
+    var parts = [];
+    if (empEmail)  parts.push(empEmail);
+    if (empTel)    parts.push(empTel);
+    if (empWeb)    parts.push(empWeb);
+    if (empCiudad) parts.push(empCiudad);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+    doc.setTextColor(255,255,255);
+    doc.text(parts.join('  ·  '), pad+6, (empSub?28:21));
+  }
+
+  // COT y fecha en header (derecha)
   var fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
   var cotNum = 'COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
   doc.setFont('helvetica','bold'); doc.setFontSize(11);
   doc.setTextColor(255,255,255);
-  doc.text(cotNum, W-pad, 14, {align:'right'});
+  doc.text(cotNum, W-pad, 12, {align:'right'});
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+  doc.text(fecha, W-pad, 19, {align:'right'});
+
+  // LexQuote branding — muy discreto en header
+  doc.setFontSize(5);
   doc.setTextColor(255,255,255);
-  doc.text(fecha, W-pad, 22, {align:'right'});
+  doc.text('generado con LexQuote', W-pad, headerH-3, {align:'right'});
 
   // Línea lateral izquierda
-  setF(ACCENT); doc.rect(0,34,4,263,'F');
+  setF(ACCENT); doc.rect(0,headerH,4,297-headerH,'F');
 
-  var y=44;
+  var y = headerH + 10;
 
   // Tabla header
   setF('#ede9df'); doc.rect(pad,y,W-pad-8,10,'F');
@@ -3022,9 +3215,11 @@ function exportarTpl2(validos, ACCENT) {
   // Footer
   setD(LINE); doc.setLineWidth(0.4); doc.line(pad, 280, W-pad, 280);
   doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT);
-  doc.text('LexQuote', pad, 288);
+  doc.text(empNombre, pad, 288);
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(LIGHT);
-  doc.text('Este documento es una cotización y no constituye una factura.', W-pad, 288, {align:'right'});
+  doc.text(empLegal, W-pad, 288, {align:'right'});
+  doc.setFontSize(5); setT(LINE);
+  doc.text('generado con LexQuote', pad, 293);
 
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Corporate Light generado ✓');
@@ -3034,8 +3229,15 @@ function exportarTpl2(validos, ACCENT) {
 function exportarTpl3(validos, ACCENT) {
   var { jsPDF } = window.jspdf;
   var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-  var W=210, pad=18;
-  var SIDEBAR=54;
+  var W=210, pad=18, SIDEBAR=54;
+  var emp = (_pdfCfg.empresa) || {};
+  var empNombre   = emp.nombre    || 'Mi Empresa';
+  var empSub      = emp.subtitulo || '';
+  var empEmail    = emp.email     || '';
+  var empTel      = emp.telefono  || '';
+  var empWeb      = emp.web       || '';
+  var empCiudad   = emp.ciudad    || '';
+  var empLegal    = emp.legal     || 'Cotización · No constituye factura.';
 
   function rgb(h){ return hexToRgb(h); }
   function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
@@ -3048,64 +3250,74 @@ function exportarTpl3(validos, ACCENT) {
   // Fondo
   setF(BG); doc.rect(0,0,W,297,'F');
 
-  // Sidebar bloque de color
+  // Sidebar de color
   setF(ACCENT); doc.rect(0,0,SIDEBAR,297,'F');
 
-  // Texto vertical en sidebar (rotado)
-  doc.setFont('helvetica','normal'); doc.setFontSize(5);
-  var ac=rgb(ACCENT);
-  // Usar color oscuro para contrastar con el accent
-  var luma = 0.299*ac[0]+0.587*ac[1]+0.114*ac[2];
-  var textOnAccent = luma>128 ? '#0e0f0d' : '#ffffff';
-  setT(textOnAccent);
+  // Contraste automático sidebar
+  var ac=rgb(ACCENT), luma=0.299*ac[0]+0.587*ac[1]+0.114*ac[2];
+  var TOA = luma>128 ? '#0e0f0d' : '#ffffff';
 
-  // Logo vertical en sidebar
-  doc.setFont('helvetica','bold'); doc.setFontSize(28);
-  setT(textOnAccent);
-  doc.text('L', SIDEBAR/2, 48, {align:'center'});
-  doc.text('Q', SIDEBAR/2, 64, {align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(5.5);
-  doc.text('LEX', SIDEBAR/2, 76, {align:'center'});
-  doc.text('QUOTE', SIDEBAR/2, 82, {align:'center'});
+  // Iniciales de la empresa en el sidebar
+  var words = empNombre.trim().split(/\s+/);
+  var initials = words.length >= 2
+    ? (words[0][0]+words[1][0]).toUpperCase()
+    : empNombre.slice(0,2).toUpperCase();
+  doc.setFont('helvetica','bold'); doc.setFontSize(28); setT(TOA);
+  doc.text(initials, SIDEBAR/2, 50, {align:'center'});
 
-  // Línea decorativa sidebar
-  var textOnAccentRgb = rgb(textOnAccent);
-  doc.setFillColor(textOnAccentRgb[0],textOnAccentRgb[1],textOnAccentRgb[2],50);
-  doc.rect(SIDEBAR/2-12, 88, 24, 0.5, 'F');
+  // Línea decorativa
+  var tr=rgb(TOA); doc.setFillColor(tr[0],tr[1],tr[2]); doc.rect(SIDEBAR/2-14,56,28,0.6,'F');
 
-  // Número cotización en sidebar (vertical)
-  doc.setFont('helvetica','normal'); doc.setFontSize(5); setT(textOnAccent);
-  doc.text('COTIZACIÓN', SIDEBAR/2, 220, {align:'center'});
+  // Nombre corto empresa bajo las iniciales
+  var short = empNombre.length>13 ? empNombre.slice(0,11)+'…' : empNombre;
+  doc.setFont('helvetica','normal'); doc.setFontSize(5.5); setT(TOA);
+  doc.text(short, SIDEBAR/2, 63, {align:'center'});
 
-  // Header content area
+  // Datos de contacto verticales (parte baja del sidebar)
+  var sY=195;
+  if (empCiudad) { doc.setFontSize(5); setT(TOA); doc.text(empCiudad, SIDEBAR/2, sY, {align:'center'}); sY+=7; }
+  if (empWeb)    { doc.setFontSize(5); setT(TOA); doc.text(empWeb,    SIDEBAR/2, sY, {align:'center'}); sY+=7; }
+  if (empEmail)  { doc.setFontSize(4.5); setT(TOA); doc.text(empEmail, SIDEBAR/2, sY, {align:'center'}); sY+=7; }
+  if (empTel)    { doc.setFontSize(4.5); setT(TOA); doc.text(empTel,   SIDEBAR/2, sY, {align:'center'}); }
+
+  // "Powered by" en el fondo del sidebar — muy discreto
+  doc.setFontSize(4); setT(TOA);
+  doc.text('LexQuote', SIDEBAR/2, 288, {align:'center'});
+
+  // ── Área de contenido ──
+  // Nombre empresa — protagonista
   doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(TEXT);
-  doc.text('LexQuote', contentX, 18);
-  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
-  doc.text('COTIZACIÓN', contentX, 25);
+  doc.text(empNombre, contentX, 16);
 
-  // COT y fecha
+  var yH = 16;
+  if (empSub) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED);
+    doc.text(empSub, contentX, 23); yH = 23;
+  }
+
+  // COT y fecha (derecha)
   var fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
   var cotNum = 'COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
   doc.setFont('helvetica','bold'); doc.setFontSize(11); setT(ACCENT);
-  doc.text(cotNum, W-pad, 14, {align:'right'});
+  doc.text(cotNum, W-pad, 12, {align:'right'});
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED);
-  doc.text(fecha, W-pad, 21, {align:'right'});
+  doc.text(fecha, W-pad, 19, {align:'right'});
 
-  setF(BORDER); doc.rect(contentX,28,contentW,0.6,'F');
+  // Línea divisoria
+  setF(BORDER); doc.rect(contentX, 28, contentW, 0.6, 'F');
 
   var y=36;
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
-  doc.text('SERVICIOS', contentX, y);
-  y+=6;
+  doc.text('SERVICIOS COTIZADOS', contentX, y); y+=6;
 
   var totalG=0, costoG=0, monedaG='USD', allNotas=[];
 
   validos.forEach(function(s, idx) {
     var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
-    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var art =window._articulos.find(function(a){ return a.id===s.artId; });
     var m=s.moneda||'USD'; monedaG=m;
 
-    // Fila país — alternada
+    // Fila alternada
     var rowBg=idx%2===0?SURFACE:SURFACE2;
     setF(rowBg); doc.rect(contentX,y,contentW,12,'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
@@ -3115,7 +3327,7 @@ function exportarTpl3(validos, ACCENT) {
     doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(TEXT);
     doc.text(fmt(s.tarifa,m), W-pad, y+8, {align:'right'});
     setF(BORDER); doc.rect(contentX,y+12,contentW,0.3,'F');
-    totalG+=s.tarifa; costoG+=s.costo; y+=13;
+    totalG+=s.tarifa; costoG+=s.costo||0; y+=13;
 
     // Vinculados
     window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
@@ -3128,7 +3340,7 @@ function exportarTpl3(validos, ACCENT) {
       totalG+=v.tarifa; y+=11;
     });
 
-    // Courier / PoA
+    // Courier
     if (pais&&pais.courier&&pais.courierTarifa) {
       setF(BG); doc.rect(contentX,y,contentW,10,'F');
       doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
@@ -3138,6 +3350,7 @@ function exportarTpl3(validos, ACCENT) {
       setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
       totalG+=pais.courierTarifa; y+=11;
     }
+    // PoA
     if (pais&&pais.poa&&pais.poaTarifa) {
       setF(BG); doc.rect(contentX,y,contentW,10,'F');
       doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
@@ -3190,9 +3403,9 @@ function exportarTpl3(validos, ACCENT) {
   // Footer
   setF(BORDER); doc.rect(contentX,278,contentW,0.4,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
-  doc.text('LexQuote', contentX, 286);
+  doc.text(empNombre, contentX, 286);
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
-  doc.text('Cotización · No constituye factura.', W-pad, 286, {align:'right'});
+  doc.text(empLegal, W-pad, 286, {align:'right'});
 
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Bold Modern generado ✓');
