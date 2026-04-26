@@ -2250,8 +2250,14 @@ window.mOnArt = function(id, artId) {
       var codigos = art.vinculados.split(',').map(function(v){ return v.trim(); }).filter(Boolean);
       var pais = window._proveedores.find(function(p){ return p.id===s.paisId; });
       codigos.forEach(function(cod) {
-        var artVinc = window._articulos.find(function(a){ return a.codigo === cod; });
+        // Normalizar: comparar como string sin ceros a la izquierda Y como string exacto
+        var artVinc = window._articulos.find(function(a) {
+          return a.codigo === cod ||
+                 a.codigo === String(parseInt(cod, 10)) ||
+                 String(parseInt(a.codigo, 10)) === String(parseInt(cod, 10));
+        });
         if (artVinc) mAgregarVinculado(id, pais, artVinc);
+        else console.warn('[LexQuote] Artículo vinculado no encontrado para código:', cod);
       });
     }
   }
