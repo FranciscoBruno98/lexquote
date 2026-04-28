@@ -2042,6 +2042,13 @@ window.mAgregar = function() {
   mRecalc();
 };
 
+function getCostoProveedor(ag, artId) {
+  if (!ag || !ag.tarifas || ag.tarifas[artId] === undefined) return 0;
+  var t = ag.tarifas[artId];
+  if (typeof t === 'object' && t) return (t.tasa || 0) + (t.honorario || 0);
+  return parseFloat(t) || 0;
+}
+
 window.mAgregarVinculado = function(linkedTo, pais, art) {
   var sMain = window._mSvcs.find(function(x){ return x.id===linkedTo; });
   var moneda = (pais && pais.moneda) || 'USD';
