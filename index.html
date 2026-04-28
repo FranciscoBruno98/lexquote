@@ -2246,21 +2246,26 @@ window.mOnArt = function(id, artId) {
   // Agregar artículos vinculados si el artículo los tiene
   if (artId) {
     var art = window._articulos.find(function(a){ return a.id===artId; });
-    if (art && art.vinculados) {
+    if (art && art.vinculados && art.vinculados.trim()) {
       var codigos = art.vinculados.split(',').map(function(v){ return v.trim(); }).filter(Boolean);
       var pais = window._proveedores.find(function(p){ return p.id===s.paisId; });
-      // DIAGNÓSTICO: mostrar qué códigos existen y qué se busca
-      console.log('[LexQuote vinculados] Art seleccionado:', art.nombre, '| vinculados raw:', art.vinculados);
-      console.log('[LexQuote vinculados] Códigos a buscar:', codigos);
-      console.log('[LexQuote vinculados] Códigos disponibles:', window._articulos.map(function(a){ return a.codigo; }));
       codigos.forEach(function(cod) {
+        var codNorm = String(parseInt(cod, 10)); // "06" → "6"
         var artVinc = window._articulos.find(function(a) {
-          return a.codigo === cod ||
-                 a.codigo === String(parseInt(cod, 10)) ||
-                 String(parseInt(a.codigo, 10)) === String(parseInt(cod, 10));
+          if (a.id === artId) return false; // no auto-vincularse
+          var aCod = (a.codigo || '').trim();
+          return aCod === cod ||                                    // exacto
+                 aCod === codNorm ||                               // normalizado
+                 String(parseInt(aCod, 10)) === codNorm ||         // ambos normalizados
+                 a.id === cod ||                                   // por id directo
+                 a.id === 'art-' + cod ||                          // id prefijado
+                 a.id === 'art-' + codNorm;                        // id prefijado normalizado
         });
-        console.log('[LexQuote vinculados] Buscando "' + cod + '" → encontrado:', artVinc ? artVinc.nombre : 'NO ENCONTRADO');
-        if (artVinc) mAgregarVinculado(id, pais, artVinc);
+        if (artVinc) {
+          mAgregarVinculado(id, pais, artVinc);
+        } else {
+          console.warn('[LexQuote] Vinculado no encontrado. Código buscado:', cod, '| Artículos disponibles:', window._articulos.map(function(a){ return a.codigo + '('+a.id+')'; }));
+        }
       });
     }
   }
