@@ -277,17 +277,23 @@
     </div>
     <div style="padding:28px 36px;display:flex;flex-direction:column;gap:14px;">
       <div id="login-error" class="login-error"></div>
-      <div class="config-field"><label>Usuario</label><input type="text" id="login-user" placeholder="tu@email.com" autocomplete="username"></div>
+      <div class="config-field"><label>Email</label><input type="email" id="login-user" placeholder="tu@empresa.com" autocomplete="username"></div>
       <div class="config-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+      <div id="login-steps" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;flex-direction:column;gap:6px;">
+        <div id="lstep-1" style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);"><span id="lstep-1-icon" style="width:16px;text-align:center;">○</span> Verificando credenciales...</div>
+        <div id="lstep-2" style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);"><span id="lstep-2-icon" style="width:16px;text-align:center;">○</span> Cargando configuración de empresa...</div>
+        <div id="lstep-3" style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);"><span id="lstep-3-icon" style="width:16px;text-align:center;">○</span> Conectando base de datos...</div>
+      </div>
     </div>
-    <div style="padding:16px 36px;border-top:1px solid var(--border);background:var(--surface2);display:flex;justify-content:flex-end;">
+    <div style="padding:16px 36px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:11px;color:var(--text3);">LexQuote · Acceso seguro</span>
       <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Ingresar →</button>
     </div>
   </div>
   </div>
 </div>
 
-<div id="config-screen">
+<div id="config-screen" style="display:none!important;">
   <div class="config-box">
     <div class="config-header">
       <div class="config-logo">LexQuote</div>
@@ -358,7 +364,8 @@
         <span id="sync-label">Conectando...</span>
       </div>
       <button class="btn-settings" onclick="abrirConfigPDF()" style="border-color:rgba(201,168,76,0.4);color:var(--gold);">▤ Configuración</button>
-      <button class="btn-settings" onclick="mostrarConfiguracion()">⚙ Reconfigurar</button>
+      <div id="header-user-email" style="font-size:10px;color:var(--text3);letter-spacing:0.06em;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+      <button class="btn-settings" onclick="cerrarSesion()" style="border-color:rgba(212,105,90,0.3);color:var(--red);">⎋ Salir</button>
     </div>
   </header>
 
@@ -1915,78 +1922,136 @@ document.getElementById('login-screen').style.display = 'flex';
   document.getElementById(fid).addEventListener('keydown', function(e) { if (e.key==='Enter') doLogin(); });
 });
 
+// ── Helpers para indicadores de progreso del login ───────────
+function loginStep(n, estado) {
+  // estado: 'loading' | 'ok' | 'error'
+  var icons = { loading: '◌', ok: '✓', error: '✕' };
+  var colors = { loading: 'var(--gold)', ok: 'var(--green)', error: 'var(--red)' };
+  var el = document.getElementById('lstep-' + n);
+  var ic = document.getElementById('lstep-' + n + '-icon');
+  if (!el || !ic) return;
+  ic.textContent = icons[estado] || '○';
+  ic.style.color = colors[estado] || 'var(--text3)';
+  el.style.color = estado === 'loading' ? 'var(--text2)' : colors[estado];
+}
+
+function loginReset() {
+  [1,2,3].forEach(function(n) {
+    var ic = document.getElementById('lstep-' + n + '-icon');
+    var el = document.getElementById('lstep-' + n);
+    if (ic) { ic.textContent = '○'; ic.style.color = ''; }
+    if (el) el.style.color = 'var(--text3)';
+  });
+  document.getElementById('login-steps').style.display = 'none';
+}
+
 window.doLogin = async function() {
-  var user = document.getElementById('login-user').value.trim();
-  var pass = document.getElementById('login-pass').value;
+  var user  = document.getElementById('login-user').value.trim();
+  var pass  = document.getElementById('login-pass').value;
   var errEl = document.getElementById('login-error');
-  var btn = document.getElementById('btn-login');
+  var btn   = document.getElementById('btn-login');
+
   errEl.style.display = 'none';
-  if (!user || !pass) { errEl.textContent = 'Ingresá usuario y contraseña.'; errEl.style.display='block'; return; }
-  btn.disabled = true; btn.textContent = 'Verificando...';
-  try {
-    var resp = await fetch('https://1B46AD.playfabapi.com/Client/LoginWithEmailAddress', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({TitleId:'1B46AD', Email:user, Password:pass})
-    });
-    var data = await resp.json();
-    if (data.code===200 && data.data && data.data.SessionTicket) {
-      var ticket = data.data.SessionTicket;
-      var playFabId = data.data.PlayFabId;
-
-      // Obtener Player Data directamente desde el cliente
-      var playerDataResp = await fetch('https://1B46AD.playfabapi.com/Client/GetUserData', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json', 'X-Authorization': ticket},
-        body: JSON.stringify({Keys: ['FB_API_KEY','FB_AUTH_DOMAIN','FB_PROJECT_ID','FB_STORAGE_BUCKET','FB_MESSAGING_SENDER_ID','FB_APP_ID']})
-      });
-      var playerData = await playerDataResp.json();
-      var fbKeys = null;
-      if (playerData.code === 200 && playerData.data && playerData.data.Data && playerData.data.Data.FB_PROJECT_ID) {
-        var d = playerData.data.Data;
-        fbKeys = {
-          apiKey:            d.FB_API_KEY             ? d.FB_API_KEY.Value             : null,
-          authDomain:        d.FB_AUTH_DOMAIN         ? d.FB_AUTH_DOMAIN.Value         : null,
-          projectId:         d.FB_PROJECT_ID          ? d.FB_PROJECT_ID.Value          : null,
-          storageBucket:     d.FB_STORAGE_BUCKET      ? d.FB_STORAGE_BUCKET.Value      : null,
-          messagingSenderId: d.FB_MESSAGING_SENDER_ID ? d.FB_MESSAGING_SENDER_ID.Value : null,
-          appId:             d.FB_APP_ID              ? d.FB_APP_ID.Value              : null
-        };
-      }
-
-      var cfgResp = await fetch('/api/config', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({sessionTicket: ticket, playFabId: playFabId, fbKeys: fbKeys})
-      });
-      var cfgText = await cfgResp.text();
-      if (!cfgResp.ok) {
-        errEl.textContent = 'Error ' + cfgResp.status + ': ' + cfgText;
-        errEl.style.display = 'block';
-        btn.disabled=false; btn.textContent='Ingresar →';
-        return;
-      }
-      var cfg;
-      try { cfg = JSON.parse(cfgText); } catch(e) {
-        errEl.textContent = 'Error parsing config: ' + cfgText.substring(0,100);
-        errEl.style.display = 'block';
-        btn.disabled=false; btn.textContent='Ingresar →';
-        return;
-      }
-      // Mostrar qué Firebase se está usando
-      console.log('Firebase projectId:', cfg.projectId);
-      document.getElementById('login-screen').style.display = 'none';
-      iniciarApp(cfg).catch(function(e) { setSyncState('error','Sin conexión: ' + e.message); });
-    } else {
-      errEl.textContent = data.errorMessage || 'Credenciales incorrectas.';
-      errEl.style.display = 'block';
-      btn.disabled=false; btn.textContent='Ingresar →';
-    }
-  } catch(e) {
-    errEl.textContent = 'Error de conexión. Intentá nuevamente.';
+  if (!user || !pass) {
+    errEl.textContent = 'Ingresá email y contraseña.';
     errEl.style.display = 'block';
-    btn.disabled=false; btn.textContent='Ingresar →';
+    return;
   }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+  loginReset();
+  document.getElementById('login-steps').style.display = 'flex';
+  loginStep(1, 'loading');
+
+  try {
+
+    // ── Paso 1: Login con PlayFab (Client API) ─────────────────
+    var pfResp = await fetch('https://1B46AD.playfabapi.com/Client/LoginWithEmailAddress', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ TitleId: '1B46AD', Email: user, Password: pass })
+    });
+    var pfData = await pfResp.json();
+
+    if (pfData.code !== 200 || !pfData.data?.SessionTicket) {
+      loginStep(1, 'error');
+      errEl.textContent = pfData.errorMessage || 'Email o contraseña incorrectos.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Ingresar →';
+      return;
+    }
+
+    loginStep(1, 'ok');
+    loginStep(2, 'loading');
+    var sessionTicket = pfData.data.SessionTicket;
+
+    // ── Paso 2: Validar ticket SERVER-SIDE y obtener config ─────
+    //  El servidor verifica el ticket con la Secret Key de PlayFab
+    //  y retorna solo las credenciales Firebase del cliente.
+    var cfgResp = await fetch('/api/config', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ sessionTicket: sessionTicket })
+    });
+
+    if (!cfgResp.ok) {
+      loginStep(2, 'error');
+      var errJson = {};
+      try { errJson = await cfgResp.json(); } catch(e) {}
+      errEl.textContent = errJson.error || ('Error del servidor (' + cfgResp.status + ')');
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Ingresar →';
+      return;
+    }
+
+    loginStep(2, 'ok');
+    loginStep(3, 'loading');
+    var cfg = await cfgResp.json();
+
+    // ── Paso 3: Conectar Firebase ────────────────────────────────
+    document.getElementById('login-screen').style.display = 'none';
+    iniciarApp(cfg).then(function() {
+      loginStep(3, 'ok');
+      // Guardar email para mostrar en header (no guardamos contraseña ni config)
+      try { sessionStorage.setItem('lq_user_email', user); } catch(e) {}
+      var headerUser = document.getElementById('header-user-email');
+      if (headerUser) headerUser.textContent = user;
+    }).catch(function(e) {
+      loginStep(3, 'error');
+      document.getElementById('login-screen').style.display = 'flex';
+      errEl.textContent = 'No se pudo conectar a la base de datos: ' + e.message;
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Ingresar →';
+    });
+
+  } catch(e) {
+    loginStep(1, 'error');
+    errEl.textContent = 'Error de conexión. Verificá tu internet e intentá de nuevo.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Ingresar →';
+  }
+};
+
+window.cerrarSesion = function() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  // Desuscribir listeners de Firebase
+  if (window._unsubArticulos)  window._unsubArticulos();
+  if (window._unsubProveedores) window._unsubProveedores();
+  if (window._unsubAgentes)    window._unsubAgentes();
+  window._db = null;
+  // Limpiar sesión
+  try { sessionStorage.removeItem('lq_user_email'); } catch(e) {}
+  // Volver al login
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('config-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  loginReset();
+  document.getElementById('btn-login').disabled = false;
+  document.getElementById('btn-login').textContent = 'Ingresar →';
 };
 
 window._mSvcs = [];
