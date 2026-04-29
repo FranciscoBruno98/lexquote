@@ -1992,7 +1992,7 @@ window.doLogin = async function() {
     var cfgResp = await fetch('/api/config', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ sessionTicket: sessionTicket })
+      body:    JSON.stringify({ sessionTicket: encodeURIComponent(sessionTicket) })
     });
 
     if (!cfgResp.ok) {

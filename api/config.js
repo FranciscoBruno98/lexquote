@@ -50,7 +50,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'JSON inválido.' });
   }
 
-  const { sessionTicket } = body || {};
+  const { sessionTicket: rawTicket } = body || {};
+  const sessionTicket = decodeURIComponent(rawTicket || '');
   if (!sessionTicket) {
     return res.status(400).json({ error: 'Falta sessionTicket.' });
   }
