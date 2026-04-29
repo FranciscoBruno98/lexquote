@@ -59,10 +59,6 @@ export default async function handler(req, res) {
   // ── 1. Validar el ticket con PlayFab SERVER-SIDE ───────────
   let playFabId;
   try {
-    console.log('[DEBUG] TitleId:', PLAYFAB_TITLE_ID);
-    console.log('[DEBUG] SecretKey present:', !!PLAYFAB_SECRET_KEY, '| length:', PLAYFAB_SECRET_KEY?.length);
-    console.log('[DEBUG] Ticket (first 40):', sessionTicket.substring(0, 40));
-
     const authResp = await fetch(
       `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Server/AuthenticateSessionTicket`,
       {
@@ -76,7 +72,6 @@ export default async function handler(req, res) {
     );
 
     const authData = await authResp.json();
-    console.log('[DEBUG] PlayFab auth response:', JSON.stringify(authData));
 
     if (authData.code !== 200 || !authData.data?.UserInfo?.PlayFabId) {
       console.warn('[LexQuote] Ticket inválido:', authData.errorMessage);
