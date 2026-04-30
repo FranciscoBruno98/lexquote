@@ -262,6 +262,7 @@
   .import-summary-lbl { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
 
@@ -836,6 +837,7 @@
     <div class="cfg-pdf-tabs">
       <button class="cfg-pdf-tab active" id="cfgtab-pdf" onclick="switchCfgTab('pdf')">PDF Exportable</button>
       <button class="cfg-pdf-tab" id="cfgtab-empresa" onclick="switchCfgTab('empresa')">◉ Mi Empresa</button>
+      <button class="cfg-pdf-tab" id="cfgtab-membrete" onclick="switchCfgTab('membrete')">⬆ Membrete PDF</button>
     </div>
     <div class="cfg-pdf-body">
 
@@ -1049,6 +1051,83 @@
         </div>
       </div><!-- /cfgpanel-empresa -->
 
+      <!-- TAB: Membrete PDF -->
+      <div class="cfg-tab-panel" id="cfgpanel-membrete">
+        <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:20px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);border-left:2px solid var(--gold);">
+          Subí el PDF de tu membrete (hoja con tu logo, encabezado y pie de página).
+          LexQuote escribirá la cotización en la <strong style="color:var(--gold);">zona central</strong> del documento, respetando tu diseño.
+        </div>
+
+        <!-- Estado actual del membrete -->
+        <div id="membrete-estado" style="margin-bottom:18px;">
+          <div id="membrete-vacio" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;border:2px dashed var(--border2);border-radius:10px;text-align:center;gap:8px;">
+            <div style="font-size:28px;opacity:0.3;">⬆</div>
+            <div style="font-size:12px;color:var(--text2);">No hay membrete cargado</div>
+            <div style="font-size:11px;color:var(--text3);">Se usará el template seleccionado en la pestaña PDF</div>
+          </div>
+          <div id="membrete-activo" style="display:none;background:var(--surface2);border:1px solid rgba(109,187,138,0.3);border-radius:10px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:20px;">📄</span>
+                <div>
+                  <div style="font-size:12px;color:var(--green);font-weight:500;" id="membrete-nombre-archivo">membrete.pdf</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="membrete-info">— páginas · — KB</div>
+                </div>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="eliminarMembrete()">✕ Quitar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zona de configuración de posición -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:18px;">
+          <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;">Zona de cotización en el PDF</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="empresa-field">
+              <label>Margen superior (mm)</label>
+              <input type="number" id="membrete-margin-top" value="45" min="10" max="200" step="1" placeholder="45">
+            </div>
+            <div class="empresa-field">
+              <label>Margen inferior (mm)</label>
+              <input type="number" id="membrete-margin-bottom" value="35" min="10" max="200" step="1" placeholder="35">
+            </div>
+            <div class="empresa-field">
+              <label>Margen izquierdo (mm)</label>
+              <input type="number" id="membrete-margin-left" value="20" min="5" max="100" step="1" placeholder="20">
+            </div>
+            <div class="empresa-field">
+              <label>Margen derecho (mm)</label>
+              <input type="number" id="membrete-margin-right" value="20" min="5" max="100" step="1" placeholder="20">
+            </div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--text3);">
+            La cotización se renderizará dentro de esos márgenes. Ajustá según el espacio libre de tu membrete.
+          </div>
+        </div>
+
+        <!-- Upload zone -->
+        <div id="membrete-dropzone"
+          style="border:2px dashed var(--border2);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;"
+          onclick="document.getElementById('membrete-file-input').click()"
+          ondragover="membreteOnDragOver(event)"
+          ondragleave="membreteOnDragLeave(event)"
+          ondrop="membreteOnDrop(event)">
+          <div style="font-size:22px;margin-bottom:8px;">📎</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Hacé clic o arrastrá tu PDF acá</div>
+          <div style="font-size:11px;color:var(--text3);">Solo PDF · Máximo 5 MB · 1 página recomendada</div>
+          <input type="file" id="membrete-file-input" accept=".pdf" style="display:none;" onchange="membreteOnFileSelect(event)">
+        </div>
+
+        <div id="membrete-upload-progress" style="display:none;margin-top:12px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
+            <span style="animation:pulse 0.8s infinite;color:var(--gold);">◌</span>
+            <span id="membrete-upload-msg">Subiendo PDF...</span>
+          </div>
+        </div>
+        <div id="membrete-upload-error" style="display:none;margin-top:10px;font-size:11px;color:var(--red);padding:8px 12px;background:var(--red-dim);border-radius:var(--radius);">
+        </div>
+      </div><!-- /cfgpanel-membrete -->
+
     </div>
     <div class="cfg-pdf-footer">
       <button class="btn btn-ghost" onclick="cerrarModal('modal-cfg-pdf')">Cancelar</button>
@@ -1060,6 +1139,7 @@
 <!-- Firebase SDKs -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 import {
   getFirestore, collection, doc, setDoc, deleteDoc,
   onSnapshot, serverTimestamp, writeBatch
@@ -1155,6 +1235,7 @@ async function iniciarApp(cfg) {
   const app = initializeApp(cfg, 'ipquote-' + cfg.projectId);
   const db = getFirestore(app);
   window._db = db;
+  window._storage = getStorage(app);
 
   // Test connection
   await new Promise((resolve, reject) => {
@@ -2955,6 +3036,17 @@ window.mExportar = function() {
   if (!validos.length) { toast('Completá al menos un servicio con país y tarifa','err'); return; }
 
   cargarConfigPDF();
+
+  // Si hay membrete cargado → usar pdf-lib con el PDF del cliente
+  try {
+    var mCfg = JSON.parse(localStorage.getItem('lexquote_membrete') || '{}');
+    if (mCfg.storageUrl) {
+      generarPDFConMembrete(validos);
+      return;
+    }
+  } catch(e) {}
+
+  // Sin membrete → templates estándar jsPDF
   var tpl = _pdfCfg.template || 1;
   var ACCENT = _pdfCfg.color || '#c9a84c';
 
@@ -3506,6 +3598,368 @@ function exportarTpl3(validos, ACCENT) {
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Bold Modern generado ✓');
 }
+
+// ══════════════════════════════════════════
+// SISTEMA DE MEMBRETE PDF
+// ══════════════════════════════════════════
+
+// Extiende switchCfgTab para soportar 'membrete'
+var _origSwitchCfgTab = window.switchCfgTab;
+window.switchCfgTab = function(tab) {
+  ['pdf','empresa','membrete'].forEach(function(t) {
+    var btn = document.getElementById('cfgtab-'+t);
+    var panel = document.getElementById('cfgpanel-'+t);
+    if (btn)   btn.classList.toggle('active', t===tab);
+    if (panel) panel.classList.toggle('active', t===tab);
+  });
+  if (tab === 'membrete') membreteCargarEstado();
+};
+
+// Estado del membrete en memoria
+window._membreteCfg = {
+  storageUrl: null,
+  storagePath: null,
+  nombreArchivo: null,
+  marginTop: 45,
+  marginBottom: 35,
+  marginLeft: 20,
+  marginRight: 20
+};
+
+function membreteCargarEstado() {
+  try {
+    var s = localStorage.getItem('lexquote_membrete');
+    if (s) window._membreteCfg = Object.assign(window._membreteCfg, JSON.parse(s));
+  } catch(e) {}
+
+  // Cargar márgenes en los inputs
+  document.getElementById('membrete-margin-top').value    = window._membreteCfg.marginTop    || 45;
+  document.getElementById('membrete-margin-bottom').value = window._membreteCfg.marginBottom || 35;
+  document.getElementById('membrete-margin-left').value   = window._membreteCfg.marginLeft   || 20;
+  document.getElementById('membrete-margin-right').value  = window._membreteCfg.marginRight  || 20;
+
+  if (window._membreteCfg.storageUrl) {
+    document.getElementById('membrete-vacio').style.display  = 'none';
+    document.getElementById('membrete-activo').style.display = 'block';
+    document.getElementById('membrete-nombre-archivo').textContent = window._membreteCfg.nombreArchivo || 'membrete.pdf';
+    document.getElementById('membrete-info').textContent = 'PDF cargado en Firebase Storage';
+  } else {
+    document.getElementById('membrete-vacio').style.display  = '';
+    document.getElementById('membrete-activo').style.display = 'none';
+  }
+}
+
+function membreteGuardarConfig() {
+  window._membreteCfg.marginTop    = parseInt(document.getElementById('membrete-margin-top').value)    || 45;
+  window._membreteCfg.marginBottom = parseInt(document.getElementById('membrete-margin-bottom').value) || 35;
+  window._membreteCfg.marginLeft   = parseInt(document.getElementById('membrete-margin-left').value)   || 20;
+  window._membreteCfg.marginRight  = parseInt(document.getElementById('membrete-margin-right').value)  || 20;
+  localStorage.setItem('lexquote_membrete', JSON.stringify(window._membreteCfg));
+}
+
+// Guardar config PDF también guarda márgenes del membrete
+var _origGuardarConfigPDF = window.guardarConfigPDF;
+window.guardarConfigPDF = function() {
+  membreteGuardarConfig();
+  _origGuardarConfigPDF();
+};
+
+// Drag & drop handlers
+window.membreteOnDragOver = function(e) {
+  e.preventDefault();
+  document.getElementById('membrete-dropzone').style.borderColor = 'var(--gold)';
+  document.getElementById('membrete-dropzone').style.background  = 'var(--gold-glow)';
+};
+window.membreteOnDragLeave = function(e) {
+  document.getElementById('membrete-dropzone').style.borderColor = '';
+  document.getElementById('membrete-dropzone').style.background  = '';
+};
+window.membreteOnDrop = function(e) {
+  e.preventDefault();
+  window.membreteOnDragLeave(e);
+  var file = e.dataTransfer.files[0];
+  if (file) membreteSubirArchivo(file);
+};
+window.membreteOnFileSelect = function(e) {
+  var file = e.target.files[0];
+  if (file) membreteSubirArchivo(file);
+  e.target.value = '';
+};
+
+async function membreteSubirArchivo(file) {
+  var errEl = document.getElementById('membrete-upload-error');
+  var progEl = document.getElementById('membrete-upload-progress');
+  var msgEl  = document.getElementById('membrete-upload-msg');
+  errEl.style.display  = 'none';
+  progEl.style.display = 'block';
+
+  // Validaciones
+  if (file.type !== 'application/pdf') {
+    errEl.textContent = 'Solo se aceptan archivos PDF.';
+    errEl.style.display = 'block';
+    progEl.style.display = 'none';
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    errEl.textContent = 'El archivo no puede superar 5 MB.';
+    errEl.style.display = 'block';
+    progEl.style.display = 'none';
+    return;
+  }
+  if (!window._storage) {
+    errEl.textContent = 'Firebase Storage no está disponible. Verificá la configuración.';
+    errEl.style.display = 'block';
+    progEl.style.display = 'none';
+    return;
+  }
+
+  try {
+    // Si hay uno anterior, borrarlo
+    if (window._membreteCfg.storagePath) {
+      try {
+        var oldRef = ref(window._storage, window._membreteCfg.storagePath);
+        await deleteObject(oldRef);
+      } catch(e) { /* ignorar si no existe */ }
+    }
+
+    msgEl.textContent = 'Subiendo PDF...';
+    var storagePath = 'membrete/membrete_' + Date.now() + '.pdf';
+    var storageRef  = ref(window._storage, storagePath);
+
+    await uploadBytes(storageRef, file);
+    msgEl.textContent = 'Obteniendo URL...';
+    var downloadUrl = await getDownloadURL(storageRef);
+
+    // Guardar en memoria y localStorage
+    window._membreteCfg.storageUrl    = downloadUrl;
+    window._membreteCfg.storagePath   = storagePath;
+    window._membreteCfg.nombreArchivo = file.name;
+    membreteGuardarConfig();
+
+    progEl.style.display = 'none';
+    membreteCargarEstado();
+    toast('Membrete subido correctamente ✓');
+
+  } catch(e) {
+    progEl.style.display = 'none';
+    errEl.textContent = 'Error al subir: ' + e.message;
+    errEl.style.display = 'block';
+    toast('Error al subir el membrete', 'err');
+  }
+}
+
+window.eliminarMembrete = async function() {
+  if (!confirm('¿Quitar el membrete? Se usará el template estándar.')) return;
+  if (window._membreteCfg.storagePath && window._storage) {
+    try {
+      var r = ref(window._storage, window._membreteCfg.storagePath);
+      await deleteObject(r);
+    } catch(e) {}
+  }
+  window._membreteCfg.storageUrl    = null;
+  window._membreteCfg.storagePath   = null;
+  window._membreteCfg.nombreArchivo = null;
+  membreteGuardarConfig();
+  membreteCargarEstado();
+  toast('Membrete eliminado');
+};
+
+// ══════════════════════════════════════════
+// GENERACIÓN DE PDF CON MEMBRETE (pdf-lib)
+// ══════════════════════════════════════════
+
+async function generarPDFConMembrete(validos) {
+  var cfg     = window._membreteCfg;
+  var empresa = (_pdfCfg && _pdfCfg.empresa) ? _pdfCfg.empresa : {};
+  var ACCENT  = (_pdfCfg && _pdfCfg.color)   ? _pdfCfg.color   : '#c9a84c';
+
+  var marginTop    = (cfg.marginTop    || 45)  * 2.8346; // mm → pt
+  var marginBottom = (cfg.marginBottom || 35)  * 2.8346;
+  var marginLeft   = (cfg.marginLeft   || 20)  * 2.8346;
+  var marginRight  = (cfg.marginRight  || 20)  * 2.8346;
+
+  try {
+    // Descargar el PDF membrete
+    toast('Descargando membrete...', 'info');
+    var response = await fetch(cfg.storageUrl);
+    if (!response.ok) throw new Error('No se pudo descargar el membrete.');
+    var membreteBytes = await response.arrayBuffer();
+
+    // Cargar con pdf-lib
+    var { PDFDocument, rgb, StandardFonts } = PDFLib;
+    var pdfDoc = await PDFDocument.load(membreteBytes);
+    var pages  = pdfDoc.getPages();
+    var page   = pages[0];
+    var { width, height } = page.getSize();
+
+    // Fuentes
+    var fontBold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    var fontNormal  = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    // Color de acento
+    function hexToRgbLib(hex) {
+      var r = parseInt(hex.slice(1,3),16)/255;
+      var g = parseInt(hex.slice(3,5),16)/255;
+      var b = parseInt(hex.slice(5,7),16)/255;
+      return rgb(r,g,b);
+    }
+    var accentColor = hexToRgbLib(ACCENT);
+    var textColor   = rgb(0.91, 0.90, 0.87);
+    var mutedColor  = rgb(0.60, 0.60, 0.55);
+    var darkBg      = rgb(0.09, 0.09, 0.08);
+    var rowBg1      = rgb(0.086, 0.090, 0.082);
+    var rowBg2      = rgb(0.118, 0.122, 0.110);
+
+    // Zona de escritura
+    var contentX = marginLeft;
+    var contentW = width - marginLeft - marginRight;
+    var startY   = height - marginTop;
+
+    var fecha  = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+    var cotNum = 'COT-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4);
+
+    var y = startY;
+
+    // ── Número de cotización y fecha (derecha) ──
+    page.drawText(cotNum, {
+      x: width - marginRight - fontBold.widthOfTextAtSize(cotNum, 11),
+      y: y, size: 11, font: fontBold, color: accentColor
+    });
+    y -= 14;
+    page.drawText(fecha, {
+      x: width - marginRight - fontNormal.widthOfTextAtSize(fecha, 8),
+      y: y, size: 8, font: fontNormal, color: mutedColor
+    });
+
+    // ── Línea divisoria ──
+    y -= 10;
+    page.drawLine({
+      start: { x: contentX, y }, end: { x: contentX + contentW, y },
+      thickness: 0.5, color: mutedColor, opacity: 0.4
+    });
+    y -= 16;
+
+    // ── Header "SERVICIOS COTIZADOS" ──
+    page.drawText('SERVICIOS COTIZADOS', {
+      x: contentX, y, size: 6.5, font: fontNormal, color: mutedColor
+    });
+    y -= 14;
+
+    // ── Filas de servicios ──
+    var totalG = 0, monedaG = 'USD';
+    var allNotas = [];
+
+    validos.forEach(function(s, idx) {
+      var pais = window._proveedores.find(function(p){ return p.id === s.paisId; });
+      var art  = window._articulos.find(function(a){ return a.id === s.artId; });
+      var m = s.moneda || 'USD'; monedaG = m;
+      var rowH = 22;
+
+      // Fondo alternado
+      var bg = idx % 2 === 0 ? rowBg1 : rowBg2;
+      page.drawRectangle({ x: contentX, y: y - rowH + 6, width: contentW, height: rowH, color: bg });
+
+      // País (bold, accent)
+      page.drawText(pais ? pais.nombre : '—', {
+        x: contentX + 6, y: y - 4, size: 9, font: fontBold, color: accentColor
+      });
+      // Artículo (muted)
+      page.drawText(art ? art.nombre : 'Servicio', {
+        x: contentX + 6, y: y - 13, size: 7.5, font: fontNormal, color: mutedColor
+      });
+      // Tarifa (derecha, bold)
+      var tarifaStr = fmt(s.tarifa, m);
+      page.drawText(tarifaStr, {
+        x: contentX + contentW - 6 - fontBold.widthOfTextAtSize(tarifaStr, 10),
+        y: y - 8, size: 10, font: fontBold, color: textColor
+      });
+
+      totalG += s.tarifa;
+      y -= rowH + 2;
+
+      // Servicios vinculados
+      window._mSvcs.filter(function(x){ return x.linkedTo === s.id && x.tipoExtra === 'vinculado' && x.tarifa; }).forEach(function(v) {
+        var artV = window._articulos.find(function(a){ return a.id === v.artId; });
+        page.drawText('↳ ' + (artV ? artV.nombre : 'Vinculado'), {
+          x: contentX + 14, y: y - 6, size: 7.5, font: fontNormal, color: mutedColor
+        });
+        var vStr = fmt(v.tarifa, m);
+        page.drawText(vStr, {
+          x: contentX + contentW - 6 - fontNormal.widthOfTextAtSize(vStr, 8),
+          y: y - 6, size: 8, font: fontNormal, color: textColor
+        });
+        totalG += v.tarifa;
+        y -= 14;
+      });
+
+      // Courier / PoA
+      if (pais && pais.courier && pais.courierTarifa) {
+        page.drawText('+ Courier', { x: contentX+14, y: y-6, size:7.5, font: fontNormal, color: mutedColor });
+        var cStr = fmt(pais.courierTarifa, m);
+        page.drawText(cStr, { x: contentX+contentW-6-fontNormal.widthOfTextAtSize(cStr,8), y:y-6, size:8, font:fontNormal, color: rgb(0.43,0.73,0.54) });
+        totalG += pais.courierTarifa; y -= 14;
+      }
+      if (pais && pais.poa && pais.poaTarifa) {
+        page.drawText('+ Power of Attorney (PoA)', { x: contentX+14, y:y-6, size:7.5, font:fontNormal, color:mutedColor });
+        var pStr = fmt(pais.poaTarifa, m);
+        page.drawText(pStr, { x: contentX+contentW-6-fontNormal.widthOfTextAtSize(pStr,8), y:y-6, size:8, font:fontNormal, color: rgb(0.43,0.73,0.54) });
+        totalG += pais.poaTarifa; y -= 14;
+      }
+
+      if (s.notas) allNotas.push(s.notas);
+      y -= 4;
+    });
+
+    y -= 8;
+
+    // ── Notas ──
+    var notasUnicas = allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+    if (notasUnicas.length) {
+      var notasTxt = notasUnicas.join(' ');
+      var notasH = 30;
+      page.drawRectangle({ x: contentX, y: y-notasH+8, width: contentW, height: notasH, color: rowBg2 });
+      page.drawRectangle({ x: contentX, y: y-notasH+8, width: 2, height: notasH, color: accentColor });
+      page.drawText('NOTAS', { x: contentX+6, y: y-4, size: 6, font: fontNormal, color: mutedColor });
+      // Truncar notas si son muy largas
+      var notasTrunc = notasTxt.length > 120 ? notasTxt.substring(0,117)+'...' : notasTxt;
+      page.drawText(notasTrunc, { x: contentX+6, y: y-14, size: 7.5, font: fontNormal, color: mutedColor });
+      y -= notasH + 10;
+    }
+
+    // ── Total box ──
+    var totalH = 26;
+    page.drawRectangle({ x: contentX, y: y-totalH+8, width: contentW, height: totalH, color: rowBg2 });
+    page.drawRectangle({ x: contentX, y: y-totalH+8, width: 3, height: totalH, color: accentColor });
+    page.drawText('TOTAL GENERAL', { x: contentX+8, y: y-4, size: 6.5, font: fontNormal, color: mutedColor });
+    page.drawText(validos.length + ' servicio/s', { x: contentX+8, y: y-13, size: 7, font: fontNormal, color: mutedColor });
+    var totalStr = fmt(totalG, monedaG);
+    page.drawText(totalStr, {
+      x: contentX + contentW - 8 - fontBold.widthOfTextAtSize(totalStr, 18),
+      y: y - 16, size: 18, font: fontBold, color: accentColor
+    });
+
+    // ── Guardar y descargar ──
+    var pdfBytes = await pdfDoc.save();
+    var blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'LexQuote-' + cotNum + '.pdf';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('PDF con membrete generado ✓');
+
+  } catch(e) {
+    toast('Error generando PDF con membrete: ' + e.message, 'err');
+    console.error(e);
+  }
+}
+
+// Inicializar membrete al cargar la app
+try {
+  var s = localStorage.getItem('lexquote_membrete');
+  if (s) window._membreteCfg = Object.assign(window._membreteCfg || {}, JSON.parse(s));
+} catch(e) {}
 
 // ── Registrar nav buttons con JS (evita ReferenceError por timing de módulo) ──
 document.querySelectorAll('.nav-btn[data-section]').forEach(function(btn) {
