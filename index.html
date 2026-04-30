@@ -3734,6 +3734,8 @@ async function membreteSubirArchivo(file) {
     window._membreteCfg.storageUrl    = downloadUrl;
     window._membreteCfg.storagePath   = storagePath;
     window._membreteCfg.nombreArchivo = file.name;
+    window._membreteCache    = null;
+    window._membreteCacheUrl = null;
     membreteGuardarConfig();
 
     progEl.style.display = 'none';
@@ -3759,6 +3761,8 @@ window.eliminarMembrete = async function() {
   window._membreteCfg.storageUrl    = null;
   window._membreteCfg.storagePath   = null;
   window._membreteCfg.nombreArchivo = null;
+  window._membreteCache    = null;
+  window._membreteCacheUrl = null;
   membreteGuardarConfig();
   membreteCargarEstado();
   toast('Membrete eliminado');
@@ -3779,11 +3783,18 @@ async function generarPDFConMembrete(validos) {
   var marginRight  = (cfg.marginRight  || 20)  * 2.8346;
 
   try {
-    // Descargar el PDF membrete
-    toast('Descargando membrete...', 'info');
-    var response = await fetch(cfg.storageUrl);
-    if (!response.ok) throw new Error('No se pudo descargar el membrete.');
-    var membreteBytes = await response.arrayBuffer();
+    // Descargar el PDF membrete (con cache en memoria para no re-descargar)
+    var membreteBytes;
+    if (window._membreteCache && window._membreteCacheUrl === cfg.storageUrl) {
+      membreteBytes = window._membreteCache;
+    } else {
+      toast('Preparando membrete...', 'info');
+      var response = await fetch(cfg.storageUrl);
+      if (!response.ok) throw new Error('No se pudo descargar el membrete.');
+      membreteBytes = await response.arrayBuffer();
+      window._membreteCache    = membreteBytes;
+      window._membreteCacheUrl = cfg.storageUrl;
+    }
 
     // Cargar con pdf-lib
     var { PDFDocument, rgb, StandardFonts } = PDFLib;
