@@ -262,7 +262,6 @@
   .import-summary-lbl { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
 
@@ -278,23 +277,17 @@
     </div>
     <div style="padding:28px 36px;display:flex;flex-direction:column;gap:14px;">
       <div id="login-error" class="login-error"></div>
-      <div class="config-field"><label>Email</label><input type="email" id="login-user" placeholder="tu@empresa.com" autocomplete="username"></div>
+      <div class="config-field"><label>Usuario</label><input type="text" id="login-user" placeholder="tu@email.com" autocomplete="username"></div>
       <div class="config-field"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
-      <div id="login-steps" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;flex-direction:column;gap:6px;">
-        <div id="lstep-1" style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);"><span id="lstep-1-icon" style="width:16px;text-align:center;">○</span> Verificando credenciales...</div>
-        <div id="lstep-2" style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);"><span id="lstep-2-icon" style="width:16px;text-align:center;">○</span> Cargando configuración de empresa...</div>
-        <div id="lstep-3" style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);"><span id="lstep-3-icon" style="width:16px;text-align:center;">○</span> Conectando base de datos...</div>
-      </div>
     </div>
-    <div style="padding:16px 36px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:11px;color:var(--text3);">LexQuote · Acceso seguro</span>
+    <div style="padding:16px 36px;border-top:1px solid var(--border);background:var(--surface2);display:flex;justify-content:flex-end;">
       <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Ingresar →</button>
     </div>
   </div>
   </div>
 </div>
 
-<div id="config-screen" style="display:none!important;">
+<div id="config-screen">
   <div class="config-box">
     <div class="config-header">
       <div class="config-logo">LexQuote</div>
@@ -365,8 +358,7 @@
         <span id="sync-label">Conectando...</span>
       </div>
       <button class="btn-settings" onclick="abrirConfigPDF()" style="border-color:rgba(201,168,76,0.4);color:var(--gold);">▤ Configuración</button>
-      <div id="header-user-email" style="font-size:10px;color:var(--text3);letter-spacing:0.06em;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
-      <button class="btn-settings" onclick="cerrarSesion()" style="border-color:rgba(212,105,90,0.3);color:var(--red);">⎋ Salir</button>
+      <button class="btn-settings" onclick="mostrarConfiguracion()">⚙ Reconfigurar</button>
     </div>
   </header>
 
@@ -837,7 +829,6 @@
     <div class="cfg-pdf-tabs">
       <button class="cfg-pdf-tab active" id="cfgtab-pdf" onclick="switchCfgTab('pdf')">PDF Exportable</button>
       <button class="cfg-pdf-tab" id="cfgtab-empresa" onclick="switchCfgTab('empresa')">◉ Mi Empresa</button>
-      <button class="cfg-pdf-tab" id="cfgtab-membrete" onclick="switchCfgTab('membrete')">⬆ Membrete PDF</button>
     </div>
     <div class="cfg-pdf-body">
 
@@ -846,7 +837,7 @@
 
       <div class="cfg-section-label">Elegí un template para tus cotizaciones</div>
 
-      <div class="tpl-grid" id="tpl-grid">
+      <div class="tpl-grid" id="tpl-grid" style="max-height:340px;overflow-y:auto;padding-right:4px;">
 
         <!-- TEMPLATE 1: Classic Dark -->
         <div class="tpl-card" id="tpl-card-1" onclick="seleccionarTemplate(1)">
@@ -963,6 +954,221 @@
           </div>
         </div>
 
+
+        <!-- TPL 4: Minimal Ivory -->
+        <div class="tpl-card" id="tpl-card-4" onclick="seleccionarTemplate(4)">
+          <svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
+            <rect width="220" height="155" fill="#faf9f6"/>
+            <rect x="0" y="0" width="220" height="1.5" fill="#c9a84c"/>
+            <text x="14" y="18" font-family="Georgia,serif" font-size="11" fill="#1a1a18" font-weight="bold">Mi Empresa</text>
+            <text x="14" y="27" font-family="Georgia,serif" font-size="5.5" fill="#9a9890">ESPECIALIDAD · RUBRO</text>
+            <text x="206" y="14" font-family="monospace" font-size="8" fill="#c9a84c" text-anchor="end" font-weight="bold">COT-2025</text>
+            <text x="206" y="21" font-family="monospace" font-size="5" fill="#9a9890" text-anchor="end">12 de enero de 2025</text>
+            <line x1="14" y1="33" x2="206" y2="33" stroke="#e2dfd6" stroke-width="0.5"/>
+            <text x="14" y="41" font-family="helvetica" font-size="5" fill="#aaa89e" letter-spacing="1">SERVICIOS COTIZADOS</text>
+            <rect x="14" y="44" width="192" height="10" fill="#f3f1ec"/>
+            <text x="18" y="51" font-family="Georgia,serif" font-size="7.5" fill="#1a1a18" font-weight="bold">Argentina</text>
+            <text x="18" y="57" font-family="helvetica" font-size="5.5" fill="#9a9890">Registro de Marca</text>
+            <text x="203" y="54" font-family="monospace" font-size="7" fill="#1a1a18" text-anchor="end">$ 800.00 USD</text>
+            <rect x="14" y="57" width="192" height="10" fill="#faf9f6"/>
+            <text x="18" y="64" font-family="Georgia,serif" font-size="7.5" fill="#1a1a18" font-weight="bold">Brasil</text>
+            <text x="18" y="70" font-family="helvetica" font-size="5.5" fill="#9a9890">Renovación</text>
+            <text x="203" y="67" font-family="monospace" font-size="7" fill="#1a1a18" text-anchor="end">$ 1,200.00 USD</text>
+            <rect x="14" y="80" width="192" height="16" fill="#f3f1ec"/>
+            <rect x="14" y="80" width="2" height="16" fill="#c9a84c"/>
+            <text x="20" y="88" font-family="helvetica" font-size="5.5" fill="#9a9890">TOTAL GENERAL</text>
+            <text x="203" y="92" font-family="Georgia,serif" font-size="13" fill="#c9a84c" text-anchor="end" font-weight="bold">$ 2,000.00 USD</text>
+            <line x1="14" y1="143" x2="206" y2="143" stroke="#e2dfd6" stroke-width="0.4"/>
+            <text x="14" y="150" font-family="Georgia,serif" font-size="6" fill="#c9a84c" font-weight="bold">Mi Empresa</text>
+            <text x="206" y="150" font-family="helvetica" font-size="4.5" fill="#aaa89e" text-anchor="end">Cotización · No constituye factura</text>
+          </svg>
+          <div class="tpl-label"><div class="tpl-name">Minimal Ivory</div><div class="tpl-desc">Clásico, tipografía serif, elegante</div></div>
+        </div>
+
+        <!-- TPL 5: Night Blue -->
+        <div class="tpl-card" id="tpl-card-5" onclick="seleccionarTemplate(5)">
+          <svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
+            <rect width="220" height="155" fill="#0d1117"/>
+            <rect x="0" y="0" width="220" height="38" fill="#161b22"/>
+            <rect x="0" y="37.5" width="220" height="1" fill="#c9a84c"/>
+            <text x="14" y="16" font-family="helvetica" font-size="11" fill="#e6edf3" font-weight="bold">Mi Empresa</text>
+            <text x="14" y="24" font-family="helvetica" font-size="5.5" fill="#7d8590">Especialidad · Rubro</text>
+            <text x="206" y="13" font-family="monospace" font-size="8" fill="#c9a84c" text-anchor="end">COT-2025</text>
+            <text x="206" y="20" font-family="monospace" font-size="5" fill="#7d8590" text-anchor="end">12 de enero de 2025</text>
+            <text x="14" y="48" font-family="helvetica" font-size="5" fill="#7d8590" letter-spacing="1">SERVICIOS COTIZADOS</text>
+            <rect x="14" y="51" width="192" height="11" fill="#161b22" rx="2"/>
+            <text x="18" y="58" font-family="helvetica" font-size="7.5" fill="#c9a84c" font-weight="bold">Argentina</text>
+            <text x="203" y="58" font-family="monospace" font-size="7" fill="#e6edf3" text-anchor="end">$ 800.00 USD</text>
+            <text x="18" y="63" font-family="helvetica" font-size="5.5" fill="#7d8590">Registro de Marca</text>
+            <rect x="14" y="64" width="192" height="11" fill="#0d1117" rx="2"/>
+            <text x="18" y="71" font-family="helvetica" font-size="7.5" fill="#c9a84c" font-weight="bold">Brasil</text>
+            <text x="203" y="71" font-family="monospace" font-size="7" fill="#e6edf3" text-anchor="end">$ 1,200.00 USD</text>
+            <text x="18" y="76" font-family="helvetica" font-size="5.5" fill="#7d8590">Renovación</text>
+            <rect x="14" y="82" width="192" height="17" fill="#161b22" rx="2"/>
+            <rect x="14" y="82" width="2.5" height="17" fill="#c9a84c" rx="1"/>
+            <text x="20" y="90" font-family="helvetica" font-size="5.5" fill="#7d8590">TOTAL GENERAL</text>
+            <text x="203" y="95" font-family="monospace" font-size="14" fill="#c9a84c" text-anchor="end" font-weight="bold">$ 2,000.00</text>
+            <line x1="14" y1="143" x2="206" y2="143" stroke="#30363d" stroke-width="0.5"/>
+            <text x="14" y="150" font-family="helvetica" font-size="6" fill="#c9a84c">Mi Empresa</text>
+            <text x="206" y="150" font-family="helvetica" font-size="4.5" fill="#7d8590" text-anchor="end">Cotización · No constituye factura</text>
+          </svg>
+          <div class="tpl-label"><div class="tpl-name">Night Blue</div><div class="tpl-desc">Oscuro, azul noche, tech</div></div>
+        </div>
+
+        <!-- TPL 6: Double Header -->
+        <div class="tpl-card" id="tpl-card-6" onclick="seleccionarTemplate(6)">
+          <svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
+            <rect width="220" height="155" fill="#f7f6f3"/>
+            <rect x="0" y="0" width="220" height="22" fill="#1a1a18"/>
+            <rect x="0" y="22" width="220" height="14" fill="#c9a84c"/>
+            <text x="14" y="15" font-family="helvetica" font-size="9" fill="#ffffff" font-weight="bold">Mi Empresa</text>
+            <text x="206" y="15" font-family="monospace" font-size="7" fill="#c9a84c" text-anchor="end">COT-2025</text>
+            <text x="14" y="32" font-family="helvetica" font-size="6.5" fill="#1a1a18" font-weight="bold">COTIZACIÓN DE SERVICIOS</text>
+            <text x="206" y="32" font-family="helvetica" font-size="5.5" fill="#1a1a18" text-anchor="end">12 de enero de 2025</text>
+            <text x="14" y="47" font-family="helvetica" font-size="5" fill="#9a9890" letter-spacing="1">DETALLE</text>
+            <line x1="14" y1="49" x2="206" y2="49" stroke="#dedad0" stroke-width="0.5"/>
+            <rect x="14" y="51" width="192" height="10" fill="#eeecea"/>
+            <text x="18" y="58" font-family="helvetica" font-size="8" fill="#1a1a18" font-weight="bold">Argentina</text>
+            <text x="100" y="58" font-family="helvetica" font-size="6.5" fill="#555">Registro de Marca</text>
+            <text x="203" y="58" font-family="monospace" font-size="7" fill="#1a1a18" text-anchor="end">$ 800.00</text>
+            <rect x="14" y="62" width="192" height="10" fill="#f7f6f3"/>
+            <text x="18" y="69" font-family="helvetica" font-size="8" fill="#1a1a18" font-weight="bold">Brasil</text>
+            <text x="100" y="69" font-family="helvetica" font-size="6.5" fill="#555">Renovación</text>
+            <text x="203" y="69" font-family="monospace" font-size="7" fill="#1a1a18" text-anchor="end">$ 1,200.00</text>
+            <rect x="14" y="78" width="192" height="15" fill="#1a1a18"/>
+            <text x="18" y="87" font-family="helvetica" font-size="6" fill="#9a9890">TOTAL GENERAL</text>
+            <text x="203" y="89" font-family="monospace" font-size="13" fill="#c9a84c" text-anchor="end" font-weight="bold">$ 2,000.00 USD</text>
+            <line x1="14" y1="143" x2="206" y2="143" stroke="#dedad0" stroke-width="0.4"/>
+            <text x="14" y="150" font-family="helvetica" font-size="5" fill="#c9a84c" font-weight="bold">Mi Empresa</text>
+            <text x="206" y="150" font-family="helvetica" font-size="4.5" fill="#9a9890" text-anchor="end">Cotización · No constituye factura</text>
+          </svg>
+          <div class="tpl-label"><div class="tpl-name">Double Header</div><div class="tpl-desc">Dos bandas, formal, bicolor</div></div>
+        </div>
+
+        <!-- TPL 7: Emerald Night -->
+        <div class="tpl-card" id="tpl-card-7" onclick="seleccionarTemplate(7)">
+          <svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
+            <rect width="220" height="155" fill="#0a1628"/>
+            <rect x="0" y="0" width="42" height="155" fill="#0f2040"/>
+            <rect x="42" y="0" width="2" height="155" fill="#c9a84c"/>
+            <text x="22" y="30" font-family="helvetica" font-size="14" fill="#c9a84c" text-anchor="middle" font-weight="bold">ME</text>
+            <line x1="10" y1="35" x2="34" y2="35" stroke="#c9a84c" stroke-width="0.5" opacity="0.5"/>
+            <text x="22" y="44" font-family="helvetica" font-size="4.5" fill="#7fa8c9" text-anchor="middle">Mi Empresa</text>
+            <text x="56" y="14" font-family="helvetica" font-size="10" fill="#e8e6df" font-weight="bold">Mi Empresa</text>
+            <text x="56" y="21" font-family="helvetica" font-size="5" fill="#4a6080">Especialidad · Rubro</text>
+            <text x="206" y="11" font-family="monospace" font-size="7.5" fill="#c9a84c" text-anchor="end" font-weight="bold">COT-2025</text>
+            <text x="206" y="18" font-family="monospace" font-size="4.5" fill="#4a6080" text-anchor="end">12 de enero de 2025</text>
+            <line x1="56" y1="26" x2="206" y2="26" stroke="#1e3a5a" stroke-width="0.5"/>
+            <text x="56" y="34" font-family="helvetica" font-size="4.5" fill="#4a6080" letter-spacing="1">SERVICIOS</text>
+            <rect x="56" y="37" width="150" height="11" fill="#0f2040" rx="1"/>
+            <text x="60" y="44" font-family="helvetica" font-size="7.5" fill="#c9a84c" font-weight="bold">Argentina</text>
+            <text x="60" y="50" font-family="helvetica" font-size="5" fill="#4a6080">Registro de Marca</text>
+            <text x="203" y="46" font-family="monospace" font-size="7" fill="#e8e6df" text-anchor="end">$ 800.00</text>
+            <rect x="56" y="50" width="150" height="11" fill="#0a1628" rx="1"/>
+            <text x="60" y="57" font-family="helvetica" font-size="7.5" fill="#c9a84c" font-weight="bold">Brasil</text>
+            <text x="60" y="63" font-family="helvetica" font-size="5" fill="#4a6080">Renovación</text>
+            <text x="203" y="59" font-family="monospace" font-size="7" fill="#e8e6df" text-anchor="end">$ 1,200.00</text>
+            <rect x="56" y="66" width="150" height="17" fill="#0f2040" rx="2"/>
+            <rect x="56" y="66" width="2" height="17" fill="#c9a84c"/>
+            <text x="62" y="74" font-family="helvetica" font-size="5" fill="#4a6080">TOTAL</text>
+            <text x="203" y="79" font-family="monospace" font-size="13" fill="#c9a84c" text-anchor="end" font-weight="bold">$ 2,000.00</text>
+          </svg>
+          <div class="tpl-label"><div class="tpl-name">Emerald Night</div><div class="tpl-desc">Sidebar azul oscuro, premium</div></div>
+        </div>
+
+        <!-- TPL 8: Typewriter -->
+        <div class="tpl-card" id="tpl-card-8" onclick="seleccionarTemplate(8)">
+          <svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
+            <rect width="220" height="155" fill="#fdfcf8"/>
+            <line x1="14" y1="8" x2="206" y2="8" stroke="#1a1a18" stroke-width="1.5"/>
+            <line x1="14" y1="11" x2="206" y2="11" stroke="#c9a84c" stroke-width="0.5"/>
+            <text x="14" y="22" font-family="Courier,monospace" font-size="11" fill="#1a1a18" font-weight="bold">MI EMPRESA</text>
+            <text x="206" y="22" font-family="Courier,monospace" font-size="9" fill="#c9a84c" text-anchor="end" font-weight="bold">COT-2025</text>
+            <text x="14" y="29" font-family="Courier,monospace" font-size="5.5" fill="#9a9890">ESPECIALIDAD · RUBRO</text>
+            <text x="206" y="29" font-family="Courier,monospace" font-size="5" fill="#9a9890" text-anchor="end">12 de enero de 2025</text>
+            <line x1="14" y1="33" x2="206" y2="33" stroke="#1a1a18" stroke-width="0.5"/>
+            <text x="14" y="41" font-family="Courier,monospace" font-size="5.5" fill="#9a9890">DESCRIPCION                          IMPORTE</text>
+            <line x1="14" y1="43" x2="206" y2="43" stroke="#9a9890" stroke-width="0.3"/>
+            <text x="14" y="51" font-family="Courier,monospace" font-size="7" fill="#1a1a18">Argentina - Reg. de Marca</text>
+            <text x="203" y="51" font-family="Courier,monospace" font-size="7" fill="#1a1a18" text-anchor="end">$ 800.00</text>
+            <text x="14" y="60" font-family="Courier,monospace" font-size="7" fill="#1a1a18">Brasil - Renovacion</text>
+            <text x="203" y="60" font-family="Courier,monospace" font-size="7" fill="#1a1a18" text-anchor="end">$ 1,200.00</text>
+            <line x1="14" y1="64" x2="206" y2="64" stroke="#9a9890" stroke-width="0.3"/>
+            <text x="14" y="73" font-family="Courier,monospace" font-size="6" fill="#9a9890">TOTAL GENERAL</text>
+            <text x="203" y="75" font-family="Courier,monospace" font-size="13" fill="#c9a84c" text-anchor="end" font-weight="bold">$ 2,000.00</text>
+            <line x1="14" y1="143" x2="206" y2="143" stroke="#1a1a18" stroke-width="1"/>
+            <line x1="14" y1="145" x2="206" y2="145" stroke="#c9a84c" stroke-width="0.4"/>
+            <text x="14" y="152" font-family="Courier,monospace" font-size="5.5" fill="#1a1a18">Mi Empresa</text>
+            <text x="206" y="152" font-family="Courier,monospace" font-size="4.5" fill="#9a9890" text-anchor="end">Cotizacion · No constituye factura</text>
+          </svg>
+          <div class="tpl-label"><div class="tpl-name">Typewriter</div><div class="tpl-desc">Monospace, estilo recibo clásico</div></div>
+        </div>
+
+        <!-- TPL 9: Split Clean -->
+        <div class="tpl-card" id="tpl-card-9" onclick="seleccionarTemplate(9)">
+          <svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
+            <rect width="220" height="155" fill="#ffffff"/>
+            <rect x="0" y="0" width="80" height="155" fill="#f0ede6"/>
+            <rect x="80" y="0" width="1" height="155" fill="#e2dfd6"/>
+            <text x="40" y="22" font-family="helvetica" font-size="8" fill="#1a1a18" text-anchor="middle" font-weight="bold">Mi</text>
+            <text x="40" y="31" font-family="helvetica" font-size="8" fill="#1a1a18" text-anchor="middle" font-weight="bold">Empresa</text>
+            <rect x="20" y="35" width="40" height="1" fill="#c9a84c"/>
+            <text x="40" y="45" font-family="helvetica" font-size="4.5" fill="#9a9890" text-anchor="middle">Especialidad</text>
+            <text x="40" y="52" font-family="helvetica" font-size="4" fill="#9a9890" text-anchor="middle">email@empresa.com</text>
+            <text x="40" y="59" font-family="helvetica" font-size="4" fill="#9a9890" text-anchor="middle">+54 11 1234-5678</text>
+            <text x="93" y="14" font-family="helvetica" font-size="10" fill="#1a1a18" font-weight="bold">Cotización</text>
+            <text x="206" y="14" font-family="monospace" font-size="8" fill="#c9a84c" text-anchor="end" font-weight="bold">COT-2025</text>
+            <text x="206" y="21" font-family="helvetica" font-size="5" fill="#9a9890" text-anchor="end">12 de enero de 2025</text>
+            <line x1="93" y1="25" x2="206" y2="25" stroke="#e2dfd6" stroke-width="0.5"/>
+            <rect x="93" y="28" width="113" height="10" fill="#f8f7f4"/>
+            <text x="97" y="35" font-family="helvetica" font-size="8" fill="#1a1a18" font-weight="bold">Argentina</text>
+            <text x="203" y="35" font-family="monospace" font-size="7" fill="#1a1a18" text-anchor="end">$ 800.00</text>
+            <text x="97" y="40" font-family="helvetica" font-size="5" fill="#9a9890">Registro de Marca</text>
+            <rect x="93" y="41" width="113" height="10" fill="#ffffff"/>
+            <text x="97" y="48" font-family="helvetica" font-size="8" fill="#1a1a18" font-weight="bold">Brasil</text>
+            <text x="203" y="48" font-family="monospace" font-size="7" fill="#1a1a18" text-anchor="end">$ 1,200.00</text>
+            <text x="97" y="53" font-family="helvetica" font-size="5" fill="#9a9890">Renovación</text>
+            <rect x="93" y="56" width="113" height="15" fill="#1a1a18"/>
+            <text x="97" y="64" font-family="helvetica" font-size="5.5" fill="#9a9890">TOTAL</text>
+            <text x="203" y="67" font-family="monospace" font-size="13" fill="#c9a84c" text-anchor="end" font-weight="bold">$ 2,000.00</text>
+          </svg>
+          <div class="tpl-label"><div class="tpl-name">Split Clean</div><div class="tpl-desc">Panel lateral de datos, minimalista</div></div>
+        </div>
+
+        <!-- TPL 10: Rose Gold -->
+        <div class="tpl-card" id="tpl-card-10" onclick="seleccionarTemplate(10)">
+          <svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
+            <rect width="220" height="155" fill="#1c1412"/>
+            <rect x="0" y="0" width="220" height="44" fill="#231916"/>
+            <rect x="0" y="43.5" width="220" height="0.8" fill="#c9a84c"/>
+            <rect x="14" y="8" width="18" height="18" rx="3" fill="#c9a84c"/>
+            <text x="23" y="21" font-family="helvetica" font-size="10" fill="#1c1412" text-anchor="middle" font-weight="bold">M</text>
+            <text x="38" y="16" font-family="helvetica" font-size="10" fill="#e8e4df" font-weight="bold">Mi Empresa</text>
+            <text x="38" y="23" font-family="helvetica" font-size="5" fill="#7a6e68">Especialidad · Rubro</text>
+            <text x="206" y="13" font-family="monospace" font-size="8" fill="#c9a84c" text-anchor="end" font-weight="bold">COT-2025</text>
+            <text x="206" y="20" font-family="monospace" font-size="4.5" fill="#7a6e68" text-anchor="end">12 de enero de 2025</text>
+            <text x="14" y="54" font-family="helvetica" font-size="4.5" fill="#7a6e68" letter-spacing="1">SERVICIOS COTIZADOS</text>
+            <rect x="14" y="57" width="192" height="12" fill="#231916" rx="2"/>
+            <rect x="14" y="57" width="2" height="12" fill="#c9a84c" rx="1"/>
+            <text x="20" y="64" font-family="helvetica" font-size="8" fill="#c9a84c" font-weight="bold">Argentina</text>
+            <text x="20" y="70" font-family="helvetica" font-size="5" fill="#7a6e68">Registro de Marca</text>
+            <text x="203" y="66" font-family="monospace" font-size="7.5" fill="#e8e4df" text-anchor="end">$ 800.00 USD</text>
+            <rect x="14" y="71" width="192" height="12" fill="#1c1412" rx="2"/>
+            <rect x="14" y="71" width="2" height="12" fill="#c9a84c" rx="1" opacity="0.4"/>
+            <text x="20" y="78" font-family="helvetica" font-size="8" fill="#c9a84c" font-weight="bold">Brasil</text>
+            <text x="20" y="84" font-family="helvetica" font-size="5" fill="#7a6e68">Renovación</text>
+            <text x="203" y="80" font-family="monospace" font-size="7.5" fill="#e8e4df" text-anchor="end">$ 1,200.00 USD</text>
+            <rect x="14" y="88" width="192" height="18" fill="#231916" rx="3"/>
+            <rect x="14" y="88" width="3" height="18" fill="#c9a84c" rx="1"/>
+            <text x="21" y="96" font-family="helvetica" font-size="5.5" fill="#7a6e68">TOTAL GENERAL</text>
+            <text x="203" y="102" font-family="monospace" font-size="14" fill="#c9a84c" text-anchor="end" font-weight="bold">$ 2,000.00 USD</text>
+            <line x1="14" y1="143" x2="206" y2="143" stroke="#3a2e2a" stroke-width="0.5"/>
+            <text x="14" y="150" font-family="helvetica" font-size="6" fill="#c9a84c" font-weight="bold">Mi Empresa</text>
+            <text x="206" y="150" font-family="helvetica" font-size="4.5" fill="#7a6e68" text-anchor="end">Cotización · No constituye factura</text>
+          </svg>
+          <div class="tpl-label"><div class="tpl-name">Rose Gold</div><div class="tpl-desc">Oscuro cálido, logo cuadrado, lujoso</div></div>
+        </div>
+
       </div>
 
       <!-- Color picker -->
@@ -1051,83 +1257,6 @@
         </div>
       </div><!-- /cfgpanel-empresa -->
 
-      <!-- TAB: Membrete PDF -->
-      <div class="cfg-tab-panel" id="cfgpanel-membrete">
-        <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:20px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);border-left:2px solid var(--gold);">
-          Subí el PDF de tu membrete (hoja con tu logo, encabezado y pie de página).
-          LexQuote escribirá la cotización en la <strong style="color:var(--gold);">zona central</strong> del documento, respetando tu diseño.
-        </div>
-
-        <!-- Estado actual del membrete -->
-        <div id="membrete-estado" style="margin-bottom:18px;">
-          <div id="membrete-vacio" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;border:2px dashed var(--border2);border-radius:10px;text-align:center;gap:8px;">
-            <div style="font-size:28px;opacity:0.3;">⬆</div>
-            <div style="font-size:12px;color:var(--text2);">No hay membrete cargado</div>
-            <div style="font-size:11px;color:var(--text3);">Se usará el template seleccionado en la pestaña PDF</div>
-          </div>
-          <div id="membrete-activo" style="display:none;background:var(--surface2);border:1px solid rgba(109,187,138,0.3);border-radius:10px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:20px;">📄</span>
-                <div>
-                  <div style="font-size:12px;color:var(--green);font-weight:500;" id="membrete-nombre-archivo">membrete.pdf</div>
-                  <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="membrete-info">— páginas · — KB</div>
-                </div>
-              </div>
-              <button class="btn btn-danger btn-sm" onclick="eliminarMembrete()">✕ Quitar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Zona de configuración de posición -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:18px;">
-          <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;">Zona de cotización en el PDF</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div class="empresa-field">
-              <label>Margen superior (mm)</label>
-              <input type="number" id="membrete-margin-top" value="45" min="10" max="200" step="1" placeholder="45">
-            </div>
-            <div class="empresa-field">
-              <label>Margen inferior (mm)</label>
-              <input type="number" id="membrete-margin-bottom" value="35" min="10" max="200" step="1" placeholder="35">
-            </div>
-            <div class="empresa-field">
-              <label>Margen izquierdo (mm)</label>
-              <input type="number" id="membrete-margin-left" value="20" min="5" max="100" step="1" placeholder="20">
-            </div>
-            <div class="empresa-field">
-              <label>Margen derecho (mm)</label>
-              <input type="number" id="membrete-margin-right" value="20" min="5" max="100" step="1" placeholder="20">
-            </div>
-          </div>
-          <div style="margin-top:10px;font-size:11px;color:var(--text3);">
-            La cotización se renderizará dentro de esos márgenes. Ajustá según el espacio libre de tu membrete.
-          </div>
-        </div>
-
-        <!-- Upload zone -->
-        <div id="membrete-dropzone"
-          style="border:2px dashed var(--border2);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;"
-          onclick="document.getElementById('membrete-file-input').click()"
-          ondragover="membreteOnDragOver(event)"
-          ondragleave="membreteOnDragLeave(event)"
-          ondrop="membreteOnDrop(event)">
-          <div style="font-size:22px;margin-bottom:8px;">📎</div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Hacé clic o arrastrá tu PDF acá</div>
-          <div style="font-size:11px;color:var(--text3);">Solo PDF · Máximo 5 MB · 1 página recomendada</div>
-          <input type="file" id="membrete-file-input" accept=".pdf" style="display:none;" onchange="membreteOnFileSelect(event)">
-        </div>
-
-        <div id="membrete-upload-progress" style="display:none;margin-top:12px;">
-          <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
-            <span style="animation:pulse 0.8s infinite;color:var(--gold);">◌</span>
-            <span id="membrete-upload-msg">Subiendo PDF...</span>
-          </div>
-        </div>
-        <div id="membrete-upload-error" style="display:none;margin-top:10px;font-size:11px;color:var(--red);padding:8px 12px;background:var(--red-dim);border-radius:var(--radius);">
-        </div>
-      </div><!-- /cfgpanel-membrete -->
-
     </div>
     <div class="cfg-pdf-footer">
       <button class="btn btn-ghost" onclick="cerrarModal('modal-cfg-pdf')">Cancelar</button>
@@ -1139,7 +1268,6 @@
 <!-- Firebase SDKs -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 import {
   getFirestore, collection, doc, setDoc, deleteDoc,
   onSnapshot, serverTimestamp, writeBatch
@@ -1235,7 +1363,6 @@ async function iniciarApp(cfg) {
   const app = initializeApp(cfg, 'ipquote-' + cfg.projectId);
   const db = getFirestore(app);
   window._db = db;
-  window._storage = getStorage(app);
 
   // Test connection
   await new Promise((resolve, reject) => {
@@ -2003,136 +2130,78 @@ document.getElementById('login-screen').style.display = 'flex';
   document.getElementById(fid).addEventListener('keydown', function(e) { if (e.key==='Enter') doLogin(); });
 });
 
-// ── Helpers para indicadores de progreso del login ───────────
-function loginStep(n, estado) {
-  // estado: 'loading' | 'ok' | 'error'
-  var icons = { loading: '◌', ok: '✓', error: '✕' };
-  var colors = { loading: 'var(--gold)', ok: 'var(--green)', error: 'var(--red)' };
-  var el = document.getElementById('lstep-' + n);
-  var ic = document.getElementById('lstep-' + n + '-icon');
-  if (!el || !ic) return;
-  ic.textContent = icons[estado] || '○';
-  ic.style.color = colors[estado] || 'var(--text3)';
-  el.style.color = estado === 'loading' ? 'var(--text2)' : colors[estado];
-}
-
-function loginReset() {
-  [1,2,3].forEach(function(n) {
-    var ic = document.getElementById('lstep-' + n + '-icon');
-    var el = document.getElementById('lstep-' + n);
-    if (ic) { ic.textContent = '○'; ic.style.color = ''; }
-    if (el) el.style.color = 'var(--text3)';
-  });
-  document.getElementById('login-steps').style.display = 'none';
-}
-
 window.doLogin = async function() {
-  var user  = document.getElementById('login-user').value.trim();
-  var pass  = document.getElementById('login-pass').value;
+  var user = document.getElementById('login-user').value.trim();
+  var pass = document.getElementById('login-pass').value;
   var errEl = document.getElementById('login-error');
-  var btn   = document.getElementById('btn-login');
-
+  var btn = document.getElementById('btn-login');
   errEl.style.display = 'none';
-  if (!user || !pass) {
-    errEl.textContent = 'Ingresá email y contraseña.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Verificando...';
-  loginReset();
-  document.getElementById('login-steps').style.display = 'flex';
-  loginStep(1, 'loading');
-
+  if (!user || !pass) { errEl.textContent = 'Ingresá usuario y contraseña.'; errEl.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando...';
   try {
-
-    // ── Paso 1: Login con PlayFab (Client API) ─────────────────
-    var pfResp = await fetch('https://1B46AD.playfabapi.com/Client/LoginWithEmailAddress', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ TitleId: '1B46AD', Email: user, Password: pass })
+    var resp = await fetch('https://1B46AD.playfabapi.com/Client/LoginWithEmailAddress', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({TitleId:'1B46AD', Email:user, Password:pass})
     });
-    var pfData = await pfResp.json();
+    var data = await resp.json();
+    if (data.code===200 && data.data && data.data.SessionTicket) {
+      var ticket = data.data.SessionTicket;
+      var playFabId = data.data.PlayFabId;
 
-    if (pfData.code !== 200 || !pfData.data?.SessionTicket) {
-      loginStep(1, 'error');
-      errEl.textContent = pfData.errorMessage || 'Email o contraseña incorrectos.';
+      // Obtener Player Data directamente desde el cliente
+      var playerDataResp = await fetch('https://1B46AD.playfabapi.com/Client/GetUserData', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json', 'X-Authorization': ticket},
+        body: JSON.stringify({Keys: ['FB_API_KEY','FB_AUTH_DOMAIN','FB_PROJECT_ID','FB_STORAGE_BUCKET','FB_MESSAGING_SENDER_ID','FB_APP_ID']})
+      });
+      var playerData = await playerDataResp.json();
+      var fbKeys = null;
+      if (playerData.code === 200 && playerData.data && playerData.data.Data && playerData.data.Data.FB_PROJECT_ID) {
+        var d = playerData.data.Data;
+        fbKeys = {
+          apiKey:            d.FB_API_KEY             ? d.FB_API_KEY.Value             : null,
+          authDomain:        d.FB_AUTH_DOMAIN         ? d.FB_AUTH_DOMAIN.Value         : null,
+          projectId:         d.FB_PROJECT_ID          ? d.FB_PROJECT_ID.Value          : null,
+          storageBucket:     d.FB_STORAGE_BUCKET      ? d.FB_STORAGE_BUCKET.Value      : null,
+          messagingSenderId: d.FB_MESSAGING_SENDER_ID ? d.FB_MESSAGING_SENDER_ID.Value : null,
+          appId:             d.FB_APP_ID              ? d.FB_APP_ID.Value              : null
+        };
+      }
+
+      var cfgResp = await fetch('/api/config', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({sessionTicket: ticket, playFabId: playFabId, fbKeys: fbKeys})
+      });
+      var cfgText = await cfgResp.text();
+      if (!cfgResp.ok) {
+        errEl.textContent = 'Error ' + cfgResp.status + ': ' + cfgText;
+        errEl.style.display = 'block';
+        btn.disabled=false; btn.textContent='Ingresar →';
+        return;
+      }
+      var cfg;
+      try { cfg = JSON.parse(cfgText); } catch(e) {
+        errEl.textContent = 'Error parsing config: ' + cfgText.substring(0,100);
+        errEl.style.display = 'block';
+        btn.disabled=false; btn.textContent='Ingresar →';
+        return;
+      }
+      // Mostrar qué Firebase se está usando
+      console.log('Firebase projectId:', cfg.projectId);
+      document.getElementById('login-screen').style.display = 'none';
+      iniciarApp(cfg).catch(function(e) { setSyncState('error','Sin conexión: ' + e.message); });
+    } else {
+      errEl.textContent = data.errorMessage || 'Credenciales incorrectas.';
       errEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Ingresar →';
-      return;
+      btn.disabled=false; btn.textContent='Ingresar →';
     }
-
-    loginStep(1, 'ok');
-    loginStep(2, 'loading');
-    var sessionTicket = pfData.data.SessionTicket;
-
-    // ── Paso 2: Validar ticket SERVER-SIDE y obtener config ─────
-    //  El servidor verifica el ticket con la Secret Key de PlayFab
-    //  y retorna solo las credenciales Firebase del cliente.
-    var cfgResp = await fetch('/api/config', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ sessionTicket: encodeURIComponent(sessionTicket) })
-    });
-
-    if (!cfgResp.ok) {
-      loginStep(2, 'error');
-      var errJson = {};
-      try { errJson = await cfgResp.json(); } catch(e) {}
-      errEl.textContent = errJson.error || ('Error del servidor (' + cfgResp.status + ')');
-      errEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Ingresar →';
-      return;
-    }
-
-    loginStep(2, 'ok');
-    loginStep(3, 'loading');
-    var cfg = await cfgResp.json();
-
-    // ── Paso 3: Conectar Firebase ────────────────────────────────
-    document.getElementById('login-screen').style.display = 'none';
-    iniciarApp(cfg).then(function() {
-      loginStep(3, 'ok');
-      // Guardar email para mostrar en header (no guardamos contraseña ni config)
-      try { sessionStorage.setItem('lq_user_email', user); } catch(e) {}
-      var headerUser = document.getElementById('header-user-email');
-      if (headerUser) headerUser.textContent = user;
-    }).catch(function(e) {
-      loginStep(3, 'error');
-      document.getElementById('login-screen').style.display = 'flex';
-      errEl.textContent = 'No se pudo conectar a la base de datos: ' + e.message;
-      errEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Ingresar →';
-    });
-
   } catch(e) {
-    loginStep(1, 'error');
-    errEl.textContent = 'Error de conexión. Verificá tu internet e intentá de nuevo.';
+    errEl.textContent = 'Error de conexión. Intentá nuevamente.';
     errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Ingresar →';
+    btn.disabled=false; btn.textContent='Ingresar →';
   }
-};
-
-window.cerrarSesion = function() {
-  if (!confirm('¿Cerrar sesión?')) return;
-  // Desuscribir listeners de Firebase
-  if (window._unsubArticulos)  window._unsubArticulos();
-  if (window._unsubProveedores) window._unsubProveedores();
-  if (window._unsubAgentes)    window._unsubAgentes();
-  window._db = null;
-  // Limpiar sesión
-  try { sessionStorage.removeItem('lq_user_email'); } catch(e) {}
-  // Volver al login
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('config-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  document.getElementById('login-error').style.display = 'none';
-  loginReset();
-  document.getElementById('btn-login').disabled = false;
-  document.getElementById('btn-login').textContent = 'Ingresar →';
 };
 
 window._mSvcs = [];
@@ -3036,25 +3105,21 @@ window.mExportar = function() {
   if (!validos.length) { toast('Completá al menos un servicio con país y tarifa','err'); return; }
 
   cargarConfigPDF();
-
-  // Si hay membrete cargado → usar pdf-lib con el PDF del cliente
-  try {
-    var mCfg = JSON.parse(localStorage.getItem('lexquote_membrete') || '{}');
-    if (mCfg.storageUrl) {
-      generarPDFConMembrete(validos);
-      return;
-    }
-  } catch(e) {}
-
-  // Sin membrete → templates estándar jsPDF
   var tpl = _pdfCfg.template || 1;
   var ACCENT = _pdfCfg.color || '#c9a84c';
 
   var { jsPDF } = window.jspdf;
 
-  if (tpl === 1) exportarTpl1(validos, ACCENT);
-  else if (tpl === 2) exportarTpl2(validos, ACCENT);
-  else if (tpl === 3) exportarTpl3(validos, ACCENT);
+  if      (tpl === 1)  exportarTpl1(validos, ACCENT);
+  else if (tpl === 2)  exportarTpl2(validos, ACCENT);
+  else if (tpl === 3)  exportarTpl3(validos, ACCENT);
+  else if (tpl === 4)  exportarTpl4(validos, ACCENT);
+  else if (tpl === 5)  exportarTpl5(validos, ACCENT);
+  else if (tpl === 6)  exportarTpl6(validos, ACCENT);
+  else if (tpl === 7)  exportarTpl7(validos, ACCENT);
+  else if (tpl === 8)  exportarTpl8(validos, ACCENT);
+  else if (tpl === 9)  exportarTpl9(validos, ACCENT);
+  else if (tpl === 10) exportarTpl10(validos, ACCENT);
 };
 
 // ─── TEMPLATE 1: Classic Dark ─────────────────────────
@@ -3599,378 +3664,480 @@ function exportarTpl3(validos, ACCENT) {
   toast('PDF Bold Modern generado ✓');
 }
 
-// ══════════════════════════════════════════
-// SISTEMA DE MEMBRETE PDF
-// ══════════════════════════════════════════
-
-// Extiende switchCfgTab para soportar 'membrete'
-var _origSwitchCfgTab = window.switchCfgTab;
-window.switchCfgTab = function(tab) {
-  ['pdf','empresa','membrete'].forEach(function(t) {
-    var btn = document.getElementById('cfgtab-'+t);
-    var panel = document.getElementById('cfgpanel-'+t);
-    if (btn)   btn.classList.toggle('active', t===tab);
-    if (panel) panel.classList.toggle('active', t===tab);
+// ─── TEMPLATE 4: Minimal Ivory ───────────────────────
+function exportarTpl4(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=16;
+  var emp = (_pdfCfg.empresa)||{};
+  var empNombre=emp.nombre||'Mi Empresa', empSub=emp.subtitulo||'', empEmail=emp.email||'', empTel=emp.telefono||'', empWeb=emp.web||'', empCiudad=emp.ciudad||'', empLegal=emp.legal||'Este documento es una cotización y no constituye una factura.';
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  function setD(h){ var c=rgb(h); doc.setDrawColor(c[0],c[1],c[2]); }
+  var BG='#faf9f6', DARK='#1a1a18', MID='#555550', LIGHT='#9a9890', LINE='#e2dfd6', GREEN='#2d7a4f';
+  var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum='COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  setF(BG); doc.rect(0,0,W,297,'F');
+  // Top accent line
+  var ac=rgb(ACCENT); doc.setFillColor(ac[0],ac[1],ac[2]); doc.rect(0,0,W,1.5,'F');
+  // Header
+  doc.setFont('times','bold'); doc.setFontSize(20); setT(DARK);
+  doc.text(empNombre, pad, 16);
+  if (empSub){ doc.setFont('times','normal'); doc.setFontSize(7); setT(LIGHT); doc.text(empSub, pad, 23); }
+  var parts=[]; if(empEmail) parts.push(empEmail); if(empTel) parts.push(empTel); if(empWeb) parts.push(empWeb); if(empCiudad) parts.push(empCiudad);
+  if(parts.length){ doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(parts.join('  ·  '), pad, 29); }
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); setT(ACCENT);
+  doc.text(cotNum, W-pad, 13, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); setT(LIGHT);
+  doc.text(fecha, W-pad, 20, {align:'right'});
+  doc.setFontSize(6); setT(LIGHT); doc.text('COTIZACIÓN', W-pad, 26, {align:'right'});
+  setD(LINE); doc.setLineWidth(0.5); doc.line(pad, 34, W-pad, 34);
+  var y=42;
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(LIGHT); doc.text('SERVICIOS COTIZADOS', pad, y); y+=6;
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[], paisesConExtras={};
+  validos.forEach(function(s,idx){
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+    var rowBg=idx%2===0?'#f3f1ec':'#faf9f6';
+    setF(rowBg); doc.rect(pad,y-4,W-pad*2,12,'F');
+    doc.setFont('times','bold'); doc.setFontSize(10); setT(ACCENT);
+    doc.text(pais?pais.nombre:'—', pad+4, y+3);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID);
+    doc.text(art?art.nombre:'Servicio', pad+48, y+3);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(DARK);
+    doc.text(fmt(s.tarifa,m), W-pad-2, y+3, {align:'right'});
+    totalG+=s.tarifa; costoG+=s.costo||0; y+=12;
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID);
+      doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), pad+4, y+2);
+      setT(DARK); doc.text(fmt(v.tarifa,m), W-pad-2, y+2, {align:'right'});
+      totalG+=v.tarifa; y+=9;
+    });
+    if(pais&&!paisesConExtras[s.paisId]){
+      if(pais.courier&&pais.courierTarifa){ doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Courier',pad+4,y+2); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad-2,y+2,{align:'right'}); totalG+=pais.courierTarifa; y+=9; }
+      if(pais.poa&&pais.poaTarifa){ doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Power of Attorney',pad+4,y+2); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad-2,y+2,{align:'right'}); totalG+=pais.poaTarifa; y+=9; }
+      paisesConExtras[s.paisId]=true;
+    }
+    if(s.notas) allNotas.push(s.notas);
   });
-  if (tab === 'membrete') membreteCargarEstado();
-};
-
-// Estado del membrete en memoria
-window._membreteCfg = {
-  storageUrl: null,
-  storagePath: null,
-  nombreArchivo: null,
-  marginTop: 45,
-  marginBottom: 35,
-  marginLeft: 20,
-  marginRight: 20
-};
-
-function membreteCargarEstado() {
-  try {
-    var s = localStorage.getItem('lexquote_membrete');
-    if (s) window._membreteCfg = Object.assign(window._membreteCfg, JSON.parse(s));
-  } catch(e) {}
-
-  // Cargar márgenes en los inputs
-  document.getElementById('membrete-margin-top').value    = window._membreteCfg.marginTop    || 45;
-  document.getElementById('membrete-margin-bottom').value = window._membreteCfg.marginBottom || 35;
-  document.getElementById('membrete-margin-left').value   = window._membreteCfg.marginLeft   || 20;
-  document.getElementById('membrete-margin-right').value  = window._membreteCfg.marginRight  || 20;
-
-  if (window._membreteCfg.storageUrl) {
-    document.getElementById('membrete-vacio').style.display  = 'none';
-    document.getElementById('membrete-activo').style.display = 'block';
-    document.getElementById('membrete-nombre-archivo').textContent = window._membreteCfg.nombreArchivo || 'membrete.pdf';
-    document.getElementById('membrete-info').textContent = 'PDF cargado en Firebase Storage';
-  } else {
-    document.getElementById('membrete-vacio').style.display  = '';
-    document.getElementById('membrete-activo').style.display = 'none';
-  }
+  y+=6;
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if(notasUnicas.length){ var lines=doc.splitTextToSize(notasUnicas.join(' '),W-pad*2-10); var nH=lines.length*5+12; setF('#f3f1ec'); doc.rect(pad,y,W-pad*2,nH,'F'); var ab=rgb(ACCENT); doc.setFillColor(ab[0],ab[1],ab[2]); doc.rect(pad,y,1.5,nH,'F'); doc.setFontSize(6); setT(LIGHT); doc.text('NOTAS',pad+5,y+6); doc.setFontSize(8); setT(MID); doc.text(lines,pad+5,y+11); y+=nH+8; }
+  // Total — serif bold
+  setF('#f3f1ec'); doc.rect(pad,y,W-pad*2,20,'F'); var ab=rgb(ACCENT); doc.setFillColor(ab[0],ab[1],ab[2]); doc.rect(pad,y,1.5,20,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(LIGHT); doc.text('TOTAL GENERAL',pad+6,y+8);
+  doc.setFont('times','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad-2,y+14,{align:'right'});
+  // Footer
+  setD(LINE); doc.setLineWidth(0.4); doc.line(pad,280,W-pad,280);
+  doc.setFont('times','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(empNombre,pad,288);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(empLegal,W-pad,288,{align:'right'});
+  doc.setFontSize(5); setT(LINE); doc.text('generado con LexQuote',pad,293);
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Minimal Ivory generado ✓');
 }
 
-function membreteGuardarConfig() {
-  window._membreteCfg.marginTop    = parseInt(document.getElementById('membrete-margin-top').value)    || 45;
-  window._membreteCfg.marginBottom = parseInt(document.getElementById('membrete-margin-bottom').value) || 35;
-  window._membreteCfg.marginLeft   = parseInt(document.getElementById('membrete-margin-left').value)   || 20;
-  window._membreteCfg.marginRight  = parseInt(document.getElementById('membrete-margin-right').value)  || 20;
-  localStorage.setItem('lexquote_membrete', JSON.stringify(window._membreteCfg));
+// ─── TEMPLATE 5: Night Blue ────────────────────────────
+function exportarTpl5(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=16;
+  var emp=(_pdfCfg.empresa)||{};
+  var empNombre=emp.nombre||'Mi Empresa', empSub=emp.subtitulo||'', empEmail=emp.email||'', empTel=emp.telefono||'', empWeb=emp.web||'', empCiudad=emp.ciudad||'', empLegal=emp.legal||'Cotización · No constituye factura.';
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  var BG='#0d1117', HEADER='#161b22', TEXT='#e6edf3', MUTED='#7d8590', BORDER='#30363d', GREEN='#3fb950';
+  var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum='COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  setF(BG); doc.rect(0,0,W,297,'F');
+  setF(HEADER); doc.rect(0,0,W,40,'F');
+  setF(ACCENT); doc.rect(0,39.5,W,1,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(TEXT); doc.text(empNombre,pad,16);
+  if(empSub){ doc.setFont('helvetica','normal'); doc.setFontSize(7); setT(MUTED); doc.text(empSub,pad,23); }
+  var parts=[]; if(empEmail) parts.push(empEmail); if(empTel) parts.push(empTel); if(empWeb) parts.push(empWeb); if(empCiudad) parts.push(empCiudad);
+  if(parts.length){ doc.setFontSize(6); setT(MUTED); doc.text(parts.join('  ·  '),pad,29); }
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); setT(ACCENT); doc.text(cotNum,W-pad,13,{align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); setT(MUTED); doc.text(fecha,W-pad,20,{align:'right'});
+  doc.setFontSize(5); setT(MUTED); doc.text('generado con LexQuote',W-pad,37,{align:'right'});
+  var y=50;
+  doc.setFontSize(6); setT(MUTED); doc.text('SERVICIOS COTIZADOS',pad,y); y+=6;
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[], paisesConExtras={};
+  validos.forEach(function(s,idx){
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+    var rowBg=idx%2===0?HEADER:BG;
+    setF(rowBg); doc.rect(pad,y-4,W-pad*2,13,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT); doc.text(pais?pais.nombre:'—',pad+4,y+3);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text(art?art.nombre:'Servicio',pad+4,y+9);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(TEXT); doc.text(fmt(s.tarifa,m),W-pad-2,y+6,{align:'right'});
+    totalG+=s.tarifa; costoG+=s.costo||0; y+=14;
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),pad+4,y+3);
+      setT(TEXT); doc.text(fmt(v.tarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=v.tarifa; y+=10;
+    });
+    if(pais&&!paisesConExtras[s.paisId]){
+      if(pais.courier&&pais.courierTarifa){ setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Courier',pad+4,y+3); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=pais.courierTarifa; y+=10; }
+      if(pais.poa&&pais.poaTarifa){ setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Power of Attorney',pad+4,y+3); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=pais.poaTarifa; y+=10; }
+      paisesConExtras[s.paisId]=true;
+    }
+    if(s.notas) allNotas.push(s.notas);
+  });
+  y+=6;
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if(notasUnicas.length){ var lines=doc.splitTextToSize(notasUnicas.join(' '),W-pad*2-10); var nH=lines.length*5+12; setF(HEADER); doc.rect(pad,y,W-pad*2,nH,'F'); var ab=rgb(ACCENT); doc.setFillColor(ab[0],ab[1],ab[2]); doc.rect(pad,y,1.5,nH,'F'); doc.setFontSize(6); setT(MUTED); doc.text('NOTAS',pad+5,y+6); doc.setFontSize(8); setT(MUTED); doc.text(lines,pad+5,y+11); y+=nH+8; }
+  setF(HEADER); doc.rect(pad,y,W-pad*2,22,'F'); var ab=rgb(ACCENT); doc.setFillColor(ab[0],ab[1],ab[2]); doc.rect(pad,y,2,22,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text('TOTAL GENERAL',pad+6,y+8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad-2,y+16,{align:'right'});
+  setF(BORDER); doc.rect(0,278,W,0.4,'F'); setF(HEADER); doc.rect(0,278.4,W,19,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(empNombre,pad,287);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text(empLegal,W-pad,287,{align:'right'});
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Night Blue generado ✓');
 }
 
-// Guardar config PDF también guarda márgenes del membrete
-var _origGuardarConfigPDF = window.guardarConfigPDF;
-window.guardarConfigPDF = function() {
-  membreteGuardarConfig();
-  _origGuardarConfigPDF();
-};
-
-// Drag & drop handlers
-window.membreteOnDragOver = function(e) {
-  e.preventDefault();
-  document.getElementById('membrete-dropzone').style.borderColor = 'var(--gold)';
-  document.getElementById('membrete-dropzone').style.background  = 'var(--gold-glow)';
-};
-window.membreteOnDragLeave = function(e) {
-  document.getElementById('membrete-dropzone').style.borderColor = '';
-  document.getElementById('membrete-dropzone').style.background  = '';
-};
-window.membreteOnDrop = function(e) {
-  e.preventDefault();
-  window.membreteOnDragLeave(e);
-  var file = e.dataTransfer.files[0];
-  if (file) membreteSubirArchivo(file);
-};
-window.membreteOnFileSelect = function(e) {
-  var file = e.target.files[0];
-  if (file) membreteSubirArchivo(file);
-  e.target.value = '';
-};
-
-async function membreteSubirArchivo(file) {
-  var errEl = document.getElementById('membrete-upload-error');
-  var progEl = document.getElementById('membrete-upload-progress');
-  var msgEl  = document.getElementById('membrete-upload-msg');
-  errEl.style.display  = 'none';
-  progEl.style.display = 'block';
-
-  // Validaciones
-  if (file.type !== 'application/pdf') {
-    errEl.textContent = 'Solo se aceptan archivos PDF.';
-    errEl.style.display = 'block';
-    progEl.style.display = 'none';
-    return;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    errEl.textContent = 'El archivo no puede superar 5 MB.';
-    errEl.style.display = 'block';
-    progEl.style.display = 'none';
-    return;
-  }
-  if (!window._storage) {
-    errEl.textContent = 'Firebase Storage no está disponible. Verificá la configuración.';
-    errEl.style.display = 'block';
-    progEl.style.display = 'none';
-    return;
-  }
-
-  try {
-    // Si hay uno anterior, borrarlo
-    if (window._membreteCfg.storagePath) {
-      try {
-        var oldRef = ref(window._storage, window._membreteCfg.storagePath);
-        await deleteObject(oldRef);
-      } catch(e) { /* ignorar si no existe */ }
+// ─── TEMPLATE 6: Double Header ─────────────────────────
+function exportarTpl6(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=16;
+  var emp=(_pdfCfg.empresa)||{};
+  var empNombre=emp.nombre||'Mi Empresa', empSub=emp.subtitulo||'', empEmail=emp.email||'', empTel=emp.telefono||'', empWeb=emp.web||'', empCiudad=emp.ciudad||'', empLegal=emp.legal||'Cotización · No constituye factura.';
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  var BG='#f7f6f3', DARK='#1a1a18', MID='#555550', LIGHT='#9a9890', LINE='#dedad0', GREEN='#1a7a4a';
+  var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum='COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  setF(BG); doc.rect(0,0,W,297,'F');
+  // Banda 1: oscura
+  setF(DARK); doc.rect(0,0,W,24,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(255,255,255); doc.text(empNombre,pad,16);
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT); doc.text(cotNum,W-pad,14,{align:'right'});
+  // Banda 2: acento
+  setF(ACCENT); doc.rect(0,24,W,14,'F');
+  var ac=rgb(ACCENT), luma=0.299*ac[0]+0.587*ac[1]+0.114*ac[2]; var TOA=luma>128?'#0e0f0d':'#ffffff';
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); setT(TOA); doc.text('COTIZACIÓN DE SERVICIOS',pad,33);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(TOA); doc.text(fecha,W-pad,33,{align:'right'});
+  if(empSub||empEmail||empTel){ var parts2=[]; if(empSub) parts2.push(empSub); if(empCiudad) parts2.push(empCiudad); if(empEmail) parts2.push(empEmail); if(empTel) parts2.push(empTel); doc.setFontSize(5.5); setT(TOA); doc.text(parts2.join('  ·  '),pad,28); }
+  doc.setFontSize(5); setT(TOA); doc.text('generado con LexQuote',W-pad,26,{align:'right'});
+  var y=48;
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(LIGHT); doc.text('DETALLE',pad,y);
+  setF(LINE); doc.rect(pad,y+1.5,W-pad*2,0.4,'F'); y+=8;
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[], paisesConExtras={};
+  validos.forEach(function(s,idx){
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+    var rowBg=idx%2===0?'#eeecea':'#f7f6f3';
+    setF(rowBg); doc.rect(pad,y-4,W-pad*2,10,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(DARK); doc.text(pais?pais.nombre:'—',pad+4,y+2);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text(art?art.nombre:'Servicio',pad+46,y+2);
+    doc.setFont('helvetica','bold'); setT(DARK); doc.text(fmt(s.tarifa,m),W-pad-2,y+2,{align:'right'});
+    totalG+=s.tarifa; costoG+=s.costo||0; y+=10;
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      setF('#f3f1eb'); doc.rect(pad,y-3,W-pad*2,9,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),pad+4,y+3); doc.text(fmt(v.tarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=v.tarifa; y+=9;
+    });
+    if(pais&&!paisesConExtras[s.paisId]){
+      if(pais.courier&&pais.courierTarifa){ setF('#f3f1eb'); doc.rect(pad,y-3,W-pad*2,9,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Courier',pad+4,y+3); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=pais.courierTarifa; y+=9; }
+      if(pais.poa&&pais.poaTarifa){ setF('#f3f1eb'); doc.rect(pad,y-3,W-pad*2,9,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Power of Attorney',pad+4,y+3); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=pais.poaTarifa; y+=9; }
+      paisesConExtras[s.paisId]=true;
     }
-
-    msgEl.textContent = 'Subiendo PDF...';
-    var storagePath = 'membrete/membrete_' + Date.now() + '.pdf';
-    var storageRef  = ref(window._storage, storagePath);
-
-    await uploadBytes(storageRef, file);
-    msgEl.textContent = 'Obteniendo URL...';
-    var downloadUrl = await getDownloadURL(storageRef);
-
-    // Guardar en memoria y localStorage
-    window._membreteCfg.storageUrl    = downloadUrl;
-    window._membreteCfg.storagePath   = storagePath;
-    window._membreteCfg.nombreArchivo = file.name;
-    window._membreteCache    = null;
-    window._membreteCacheUrl = null;
-    membreteGuardarConfig();
-
-    progEl.style.display = 'none';
-    membreteCargarEstado();
-    toast('Membrete subido correctamente ✓');
-
-  } catch(e) {
-    progEl.style.display = 'none';
-    errEl.textContent = 'Error al subir: ' + e.message;
-    errEl.style.display = 'block';
-    toast('Error al subir el membrete', 'err');
-  }
+    if(s.notas) allNotas.push(s.notas);
+  });
+  y+=6;
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if(notasUnicas.length){ var lines=doc.splitTextToSize(notasUnicas.join(' '),W-pad*2-10); var nH=lines.length*5+12; setF('#eeecea'); doc.rect(pad,y,W-pad*2,nH,'F'); var ab=rgb(ACCENT); doc.setFillColor(ab[0],ab[1],ab[2]); doc.rect(pad,y,1.5,nH,'F'); doc.setFontSize(6); setT(LIGHT); doc.text('NOTAS',pad+5,y+6); doc.setFontSize(8); setT(MID); doc.text(lines,pad+5,y+11); y+=nH+8; }
+  setF(DARK); doc.rect(pad,y,W-pad*2,20,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(160,160,155); doc.text('TOTAL GENERAL',pad+6,y+8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad-2,y+15,{align:'right'});
+  setF(LINE); doc.rect(pad,278,W-pad*2,0.4,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(empNombre,pad,287);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(empLegal,W-pad,287,{align:'right'});
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Double Header generado ✓');
 }
 
-window.eliminarMembrete = async function() {
-  if (!confirm('¿Quitar el membrete? Se usará el template estándar.')) return;
-  if (window._membreteCfg.storagePath && window._storage) {
-    try {
-      var r = ref(window._storage, window._membreteCfg.storagePath);
-      await deleteObject(r);
-    } catch(e) {}
-  }
-  window._membreteCfg.storageUrl    = null;
-  window._membreteCfg.storagePath   = null;
-  window._membreteCfg.nombreArchivo = null;
-  window._membreteCache    = null;
-  window._membreteCacheUrl = null;
-  membreteGuardarConfig();
-  membreteCargarEstado();
-  toast('Membrete eliminado');
-};
-
-// ══════════════════════════════════════════
-// GENERACIÓN DE PDF CON MEMBRETE (pdf-lib)
-// ══════════════════════════════════════════
-
-async function generarPDFConMembrete(validos) {
-  var cfg     = window._membreteCfg;
-  var empresa = (_pdfCfg && _pdfCfg.empresa) ? _pdfCfg.empresa : {};
-  var ACCENT  = (_pdfCfg && _pdfCfg.color)   ? _pdfCfg.color   : '#c9a84c';
-
-  var marginTop    = (cfg.marginTop    || 45)  * 2.8346; // mm → pt
-  var marginBottom = (cfg.marginBottom || 35)  * 2.8346;
-  var marginLeft   = (cfg.marginLeft   || 20)  * 2.8346;
-  var marginRight  = (cfg.marginRight  || 20)  * 2.8346;
-
-  try {
-    // Descargar el PDF membrete (con cache en memoria para no re-descargar)
-    var membreteBytes;
-    if (window._membreteCache && window._membreteCacheUrl === cfg.storageUrl) {
-      membreteBytes = window._membreteCache;
-    } else {
-      toast('Preparando membrete...', 'info');
-      var response = await fetch(cfg.storageUrl);
-      if (!response.ok) throw new Error('No se pudo descargar el membrete.');
-      membreteBytes = await response.arrayBuffer();
-      window._membreteCache    = membreteBytes;
-      window._membreteCacheUrl = cfg.storageUrl;
+// ─── TEMPLATE 7: Emerald Night ─────────────────────────
+function exportarTpl7(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=16, SIDEBAR=46;
+  var emp=(_pdfCfg.empresa)||{};
+  var empNombre=emp.nombre||'Mi Empresa', empSub=emp.subtitulo||'', empEmail=emp.email||'', empTel=emp.telefono||'', empWeb=emp.web||'', empCiudad=emp.ciudad||'', empLegal=emp.legal||'Cotización · No constituye factura.';
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  var BG='#0a1628', PANEL='#0f2040', TEXT='#e8e6df', MUTED='#4a6080', LIGHT='#7fa8c9', BORDER='#1e3a5a', GREEN='#3fb950';
+  var contentX=SIDEBAR+8, contentW=W-SIDEBAR-pad;
+  var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum='COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  setF(BG); doc.rect(0,0,W,297,'F');
+  setF(PANEL); doc.rect(0,0,SIDEBAR,297,'F');
+  setF(ACCENT); doc.rect(SIDEBAR,0,2,297,'F');
+  // Sidebar: iniciales
+  var words=empNombre.trim().split(/\s+/);
+  var initials=words.length>=2?(words[0][0]+words[1][0]).toUpperCase():empNombre.slice(0,2).toUpperCase();
+  doc.setFont('helvetica','bold'); doc.setFontSize(24); setT(ACCENT); doc.text(initials,SIDEBAR/2,38,{align:'center'});
+  var ab=rgb(ACCENT); doc.setFillColor(ab[0],ab[1],ab[2]); doc.rect(SIDEBAR/2-12,42,24,0.5,'F');
+  var shortName=empNombre.length>11?empNombre.slice(0,9)+'…':empNombre;
+  doc.setFont('helvetica','normal'); doc.setFontSize(5); setT(LIGHT); doc.text(shortName,SIDEBAR/2,48,{align:'center'});
+  var sY=180;
+  if(empCiudad){ doc.setFontSize(4.5); setT(LIGHT); doc.text(empCiudad,SIDEBAR/2,sY,{align:'center'}); sY+=7; }
+  if(empWeb){ doc.setFontSize(4.5); setT(LIGHT); doc.text(empWeb,SIDEBAR/2,sY,{align:'center'}); sY+=7; }
+  if(empEmail){ doc.setFontSize(4); setT(LIGHT); doc.text(empEmail,SIDEBAR/2,sY,{align:'center'}); sY+=7; }
+  if(empTel){ doc.setFontSize(4); setT(LIGHT); doc.text(empTel,SIDEBAR/2,sY,{align:'center'}); }
+  doc.setFontSize(4); setT(MUTED); doc.text('LexQuote',SIDEBAR/2,288,{align:'center'});
+  // Content
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); setT(TEXT); doc.text(empNombre,contentX,15);
+  if(empSub){ doc.setFont('helvetica','normal'); doc.setFontSize(7); setT(MUTED); doc.text(empSub,contentX,22); }
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); setT(ACCENT); doc.text(cotNum,W-pad,12,{align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); setT(MUTED); doc.text(fecha,W-pad,19,{align:'right'});
+  setF(BORDER); doc.rect(contentX,27,contentW,0.5,'F');
+  var y=35;
+  doc.setFontSize(5.5); setT(MUTED); doc.text('SERVICIOS COTIZADOS',contentX,y); y+=6;
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[], paisesConExtras={};
+  validos.forEach(function(s,idx){
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+    var rowBg=idx%2===0?PANEL:BG;
+    setF(rowBg); doc.rect(contentX,y-3,contentW,13,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); setT(ACCENT); doc.text(pais?pais.nombre:'—',contentX+4,y+4);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED); doc.text(art?art.nombre:'Servicio',contentX+4,y+9);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(TEXT); doc.text(fmt(s.tarifa,m),W-pad,y+6,{align:'right'});
+    totalG+=s.tarifa; costoG+=s.costo||0; y+=14;
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      setF(BG); doc.rect(contentX,y-3,contentW,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),contentX+4,y+4); setT(TEXT); doc.text(fmt(v.tarifa,m),W-pad,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
+    });
+    if(pais&&!paisesConExtras[s.paisId]){
+      if(pais.courier&&pais.courierTarifa){ setF(BG); doc.rect(contentX,y-3,contentW,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Courier',contentX+4,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad,y+4,{align:'right'}); totalG+=pais.courierTarifa; y+=10; }
+      if(pais.poa&&pais.poaTarifa){ setF(BG); doc.rect(contentX,y-3,contentW,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Power of Attorney',contentX+4,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad,y+4,{align:'right'}); totalG+=pais.poaTarifa; y+=10; }
+      paisesConExtras[s.paisId]=true;
     }
-
-    // Cargar con pdf-lib
-    var { PDFDocument, rgb, StandardFonts } = PDFLib;
-    var pdfDoc = await PDFDocument.load(membreteBytes);
-    var pages  = pdfDoc.getPages();
-    var page   = pages[0];
-    var { width, height } = page.getSize();
-
-    // Fuentes
-    var fontBold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    var fontNormal  = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-    // Color de acento
-    function hexToRgbLib(hex) {
-      var r = parseInt(hex.slice(1,3),16)/255;
-      var g = parseInt(hex.slice(3,5),16)/255;
-      var b = parseInt(hex.slice(5,7),16)/255;
-      return rgb(r,g,b);
-    }
-    var accentColor = hexToRgbLib(ACCENT);
-    var textColor   = rgb(0.91, 0.90, 0.87);
-    var mutedColor  = rgb(0.60, 0.60, 0.55);
-    var darkBg      = rgb(0.09, 0.09, 0.08);
-    var rowBg1      = rgb(0.086, 0.090, 0.082);
-    var rowBg2      = rgb(0.118, 0.122, 0.110);
-
-    // Zona de escritura
-    var contentX = marginLeft;
-    var contentW = width - marginLeft - marginRight;
-    var startY   = height - marginTop;
-
-    var fecha  = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
-    var cotNum = 'COT-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4);
-
-    var y = startY;
-
-    // ── Número de cotización y fecha (derecha) ──
-    page.drawText(cotNum, {
-      x: width - marginRight - fontBold.widthOfTextAtSize(cotNum, 11),
-      y: y, size: 11, font: fontBold, color: accentColor
-    });
-    y -= 14;
-    page.drawText(fecha, {
-      x: width - marginRight - fontNormal.widthOfTextAtSize(fecha, 8),
-      y: y, size: 8, font: fontNormal, color: mutedColor
-    });
-
-    // ── Línea divisoria ──
-    y -= 10;
-    page.drawLine({
-      start: { x: contentX, y }, end: { x: contentX + contentW, y },
-      thickness: 0.5, color: mutedColor, opacity: 0.4
-    });
-    y -= 16;
-
-    // ── Header "SERVICIOS COTIZADOS" ──
-    page.drawText('SERVICIOS COTIZADOS', {
-      x: contentX, y, size: 6.5, font: fontNormal, color: mutedColor
-    });
-    y -= 14;
-
-    // ── Filas de servicios ──
-    var totalG = 0, monedaG = 'USD';
-    var allNotas = [];
-
-    validos.forEach(function(s, idx) {
-      var pais = window._proveedores.find(function(p){ return p.id === s.paisId; });
-      var art  = window._articulos.find(function(a){ return a.id === s.artId; });
-      var m = s.moneda || 'USD'; monedaG = m;
-      var rowH = 22;
-
-      // Fondo alternado
-      var bg = idx % 2 === 0 ? rowBg1 : rowBg2;
-      page.drawRectangle({ x: contentX, y: y - rowH + 6, width: contentW, height: rowH, color: bg });
-
-      // País (bold, accent)
-      page.drawText(pais ? pais.nombre : '—', {
-        x: contentX + 6, y: y - 4, size: 9, font: fontBold, color: accentColor
-      });
-      // Artículo (muted)
-      page.drawText(art ? art.nombre : 'Servicio', {
-        x: contentX + 6, y: y - 13, size: 7.5, font: fontNormal, color: mutedColor
-      });
-      // Tarifa (derecha, bold)
-      var tarifaStr = fmt(s.tarifa, m);
-      page.drawText(tarifaStr, {
-        x: contentX + contentW - 6 - fontBold.widthOfTextAtSize(tarifaStr, 10),
-        y: y - 8, size: 10, font: fontBold, color: textColor
-      });
-
-      totalG += s.tarifa;
-      y -= rowH + 2;
-
-      // Servicios vinculados
-      window._mSvcs.filter(function(x){ return x.linkedTo === s.id && x.tipoExtra === 'vinculado' && x.tarifa; }).forEach(function(v) {
-        var artV = window._articulos.find(function(a){ return a.id === v.artId; });
-        page.drawText('↳ ' + (artV ? artV.nombre : 'Vinculado'), {
-          x: contentX + 14, y: y - 6, size: 7.5, font: fontNormal, color: mutedColor
-        });
-        var vStr = fmt(v.tarifa, m);
-        page.drawText(vStr, {
-          x: contentX + contentW - 6 - fontNormal.widthOfTextAtSize(vStr, 8),
-          y: y - 6, size: 8, font: fontNormal, color: textColor
-        });
-        totalG += v.tarifa;
-        y -= 14;
-      });
-
-      // Courier / PoA
-      if (pais && pais.courier && pais.courierTarifa) {
-        page.drawText('+ Courier', { x: contentX+14, y: y-6, size:7.5, font: fontNormal, color: mutedColor });
-        var cStr = fmt(pais.courierTarifa, m);
-        page.drawText(cStr, { x: contentX+contentW-6-fontNormal.widthOfTextAtSize(cStr,8), y:y-6, size:8, font:fontNormal, color: rgb(0.43,0.73,0.54) });
-        totalG += pais.courierTarifa; y -= 14;
-      }
-      if (pais && pais.poa && pais.poaTarifa) {
-        page.drawText('+ Power of Attorney (PoA)', { x: contentX+14, y:y-6, size:7.5, font:fontNormal, color:mutedColor });
-        var pStr = fmt(pais.poaTarifa, m);
-        page.drawText(pStr, { x: contentX+contentW-6-fontNormal.widthOfTextAtSize(pStr,8), y:y-6, size:8, font:fontNormal, color: rgb(0.43,0.73,0.54) });
-        totalG += pais.poaTarifa; y -= 14;
-      }
-
-      if (s.notas) allNotas.push(s.notas);
-      y -= 4;
-    });
-
-    y -= 8;
-
-    // ── Notas ──
-    var notasUnicas = allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
-    if (notasUnicas.length) {
-      var notasTxt = notasUnicas.join(' ');
-      var notasH = 30;
-      page.drawRectangle({ x: contentX, y: y-notasH+8, width: contentW, height: notasH, color: rowBg2 });
-      page.drawRectangle({ x: contentX, y: y-notasH+8, width: 2, height: notasH, color: accentColor });
-      page.drawText('NOTAS', { x: contentX+6, y: y-4, size: 6, font: fontNormal, color: mutedColor });
-      // Truncar notas si son muy largas
-      var notasTrunc = notasTxt.length > 120 ? notasTxt.substring(0,117)+'...' : notasTxt;
-      page.drawText(notasTrunc, { x: contentX+6, y: y-14, size: 7.5, font: fontNormal, color: mutedColor });
-      y -= notasH + 10;
-    }
-
-    // ── Total box ──
-    var totalH = 26;
-    page.drawRectangle({ x: contentX, y: y-totalH+8, width: contentW, height: totalH, color: rowBg2 });
-    page.drawRectangle({ x: contentX, y: y-totalH+8, width: 3, height: totalH, color: accentColor });
-    page.drawText('TOTAL GENERAL', { x: contentX+8, y: y-4, size: 6.5, font: fontNormal, color: mutedColor });
-    page.drawText(validos.length + ' servicio/s', { x: contentX+8, y: y-13, size: 7, font: fontNormal, color: mutedColor });
-    var totalStr = fmt(totalG, monedaG);
-    page.drawText(totalStr, {
-      x: contentX + contentW - 8 - fontBold.widthOfTextAtSize(totalStr, 18),
-      y: y - 16, size: 18, font: fontBold, color: accentColor
-    });
-
-    // ── Guardar y descargar ──
-    var pdfBytes = await pdfDoc.save();
-    var blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'LexQuote-' + cotNum + '.pdf';
-    a.click();
-    URL.revokeObjectURL(url);
-    toast('PDF con membrete generado ✓');
-
-  } catch(e) {
-    toast('Error generando PDF con membrete: ' + e.message, 'err');
-    console.error(e);
-  }
+    if(s.notas) allNotas.push(s.notas);
+  });
+  y+=6;
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if(notasUnicas.length){ var lines=doc.splitTextToSize(notasUnicas.join(' '),contentW-8); var nH=lines.length*5+12; setF(PANEL); doc.rect(contentX,y,contentW,nH,'F'); var ab2=rgb(ACCENT); doc.setFillColor(ab2[0],ab2[1],ab2[2]); doc.rect(contentX,y,1.5,nH,'F'); doc.setFontSize(6); setT(MUTED); doc.text('NOTAS',contentX+5,y+6); doc.setFontSize(8); setT(LIGHT); doc.text(lines,contentX+5,y+11); y+=nH+8; }
+  setF(PANEL); doc.rect(contentX,y,contentW,22,'F'); var ab2=rgb(ACCENT); doc.setFillColor(ab2[0],ab2[1],ab2[2]); doc.rect(contentX,y,2,22,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text('TOTAL GENERAL',contentX+6,y+8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad,y+16,{align:'right'});
+  setF(BORDER); doc.rect(contentX,278,contentW,0.4,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); setT(ACCENT); doc.text(empNombre,contentX,286);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(MUTED); doc.text(empLegal,W-pad,286,{align:'right'});
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Emerald Night generado ✓');
 }
 
-// Inicializar membrete al cargar la app
-try {
-  var s = localStorage.getItem('lexquote_membrete');
-  if (s) window._membreteCfg = Object.assign(window._membreteCfg || {}, JSON.parse(s));
-} catch(e) {}
+// ─── TEMPLATE 8: Typewriter ────────────────────────────
+function exportarTpl8(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=16;
+  var emp=(_pdfCfg.empresa)||{};
+  var empNombre=emp.nombre||'Mi Empresa', empSub=emp.subtitulo||'', empEmail=emp.email||'', empTel=emp.telefono||'', empLegal=emp.legal||'Cotizacion · No constituye factura.';
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  var BG='#fdfcf8', DARK='#1a1a18', MID='#555550', LIGHT='#9a9890', GREEN='#2d7a4f';
+  var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum='COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  setF(BG); doc.rect(0,0,W,297,'F');
+  // Double line header
+  setF(DARK); doc.rect(pad,8,W-pad*2,1.5,'F');
+  setF(ACCENT); doc.rect(pad,10.5,W-pad*2,0.5,'F');
+  doc.setFont('courier','bold'); doc.setFontSize(18); setT(DARK); doc.text(empNombre.toUpperCase(),pad,24);
+  doc.setFont('courier','bold'); doc.setFontSize(11); setT(ACCENT); doc.text(cotNum,W-pad,24,{align:'right'});
+  if(empSub){ doc.setFont('courier','normal'); doc.setFontSize(6.5); setT(LIGHT); doc.text(empSub.toUpperCase(),pad,31); }
+  doc.setFont('courier','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(fecha,W-pad,31,{align:'right'});
+  setF(DARK); doc.rect(pad,34,W-pad*2,0.5,'F');
+  var y=42;
+  doc.setFont('courier','normal'); doc.setFontSize(6.5); setT(LIGHT);
+  var header='DESCRIPCION' + ' '.repeat(Math.max(2,38)) + 'IMPORTE';
+  doc.text(header,pad,y); y+=3;
+  setF(LIGHT); doc.rect(pad,y,W-pad*2,0.3,'F'); y+=5;
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[], paisesConExtras={};
+  validos.forEach(function(s){
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+    var label=(pais?pais.nombre:'—')+' - '+(art?art.nombre:'Servicio');
+    if(label.length>50) label=label.substring(0,47)+'...';
+    doc.setFont('courier','bold'); doc.setFontSize(8.5); setT(DARK); doc.text(label,pad,y);
+    doc.setFont('courier','bold'); setT(DARK); doc.text(fmt(s.tarifa,m),W-pad,y,{align:'right'});
+    totalG+=s.tarifa; costoG+=s.costo||0; y+=7;
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      doc.setFont('courier','normal'); doc.setFontSize(8); setT(MID); doc.text('  -> '+(artV?artV.nombre:'Vinculado'),pad,y); doc.text(fmt(v.tarifa,m),W-pad,y,{align:'right'}); totalG+=v.tarifa; y+=7;
+    });
+    if(pais&&!paisesConExtras[s.paisId]){
+      if(pais.courier&&pais.courierTarifa){ doc.setFont('courier','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Courier',pad,y); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad,y,{align:'right'}); totalG+=pais.courierTarifa; y+=7; }
+      if(pais.poa&&pais.poaTarifa){ doc.setFont('courier','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Power of Attorney',pad,y); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad,y,{align:'right'}); totalG+=pais.poaTarifa; y+=7; }
+      paisesConExtras[s.paisId]=true;
+    }
+    if(s.notas) allNotas.push(s.notas);
+    setF(LIGHT); doc.rect(pad,y,W-pad*2,0.2,'F'); y+=4;
+  });
+  y+=4;
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if(notasUnicas.length){ var lines=doc.splitTextToSize(notasUnicas.join(' '),W-pad*2); setF(LIGHT); doc.rect(pad,y,W-pad*2,0.3,'F'); y+=5; doc.setFont('courier','normal'); doc.setFontSize(7); setT(MID); doc.text('NOTAS: ',pad,y); doc.text(lines,pad,y+5); y+=lines.length*5+10; }
+  setF(LIGHT); doc.rect(pad,y,W-pad*2,0.3,'F'); y+=5;
+  doc.setFont('courier','normal'); doc.setFontSize(7); setT(LIGHT); doc.text('TOTAL GENERAL',pad,y+4);
+  doc.setFont('courier','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad,y+6,{align:'right'}); y+=14;
+  setF(DARK); doc.rect(pad,278,W-pad*2,1,'F');
+  setF(ACCENT); doc.rect(pad,279.5,W-pad*2,0.4,'F');
+  doc.setFont('courier','bold'); doc.setFontSize(8); setT(DARK); doc.text(empNombre,pad,287);
+  doc.setFont('courier','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(empLegal,W-pad,287,{align:'right'});
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Typewriter generado ✓');
+}
+
+// ─── TEMPLATE 9: Split Clean ───────────────────────────
+function exportarTpl9(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, SPLIT=68, pad=14;
+  var emp=(_pdfCfg.empresa)||{};
+  var empNombre=emp.nombre||'Mi Empresa', empSub=emp.subtitulo||'', empEmail=emp.email||'', empTel=emp.telefono||'', empWeb=emp.web||'', empCiudad=emp.ciudad||'', empLegal=emp.legal||'Cotización · No constituye factura.';
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  var BG='#ffffff', PANEL='#f0ede6', DARK='#1a1a18', MID='#555550', LIGHT='#9a9890', LINE='#e2dfd6', GREEN='#2d7a4f';
+  var contentX=SPLIT+10, contentW=W-SPLIT-pad-10;
+  var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum='COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  setF(PANEL); doc.rect(0,0,SPLIT,297,'F');
+  setF(BG); doc.rect(SPLIT,0,W-SPLIT,297,'F');
+  setF(LINE); doc.rect(SPLIT,0,0.8,297,'F');
+  // Panel izquierdo — datos empresa
+  var words2=empNombre.trim().split(/\s+/);
+  var nameLines=words2.length>1?[words2[0],words2.slice(1).join(' ')]:[empNombre];
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); setT(DARK);
+  nameLines.forEach(function(l,i){ doc.text(l,SPLIT/2,26+(i*10),{align:'center'}); });
+  var ab=rgb(ACCENT); doc.setFillColor(ab[0],ab[1],ab[2]); doc.rect(SPLIT/2-18,26+nameLines.length*10,36,0.8,'F');
+  var sY=30+nameLines.length*10+8;
+  if(empSub){ doc.setFont('helvetica','normal'); doc.setFontSize(5.5); setT(LIGHT); doc.text(empSub,SPLIT/2,sY,{align:'center'}); sY+=8; }
+  if(empCiudad){ doc.setFontSize(5); setT(LIGHT); doc.text(empCiudad,SPLIT/2,sY,{align:'center'}); sY+=7; }
+  if(empEmail){ doc.setFontSize(5); setT(LIGHT); doc.text(empEmail,SPLIT/2,sY,{align:'center'}); sY+=7; }
+  if(empTel){ doc.setFontSize(5); setT(LIGHT); doc.text(empTel,SPLIT/2,sY,{align:'center'}); sY+=7; }
+  if(empWeb){ doc.setFontSize(5); setT(LIGHT); doc.text(empWeb,SPLIT/2,sY,{align:'center'}); }
+  doc.setFontSize(4.5); setT(LIGHT); doc.text('generado con LexQuote',SPLIT/2,290,{align:'center'});
+  // Contenido
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); setT(DARK); doc.text('Cotización',contentX,16);
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT); doc.text(cotNum,W-pad,13,{align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); setT(LIGHT); doc.text(fecha,W-pad,20,{align:'right'});
+  setF(LINE); doc.rect(contentX,24,contentW,0.5,'F');
+  var y=32;
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[], paisesConExtras={};
+  validos.forEach(function(s,idx){
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+    var rowBg=idx%2===0?'#f8f7f4':BG;
+    setF(rowBg); doc.rect(contentX,y-3,contentW,13,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); setT(DARK); doc.text(pais?pais.nombre:'—',contentX+4,y+4);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MID); doc.text(art?art.nombre:'Servicio',contentX+4,y+9);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); setT(DARK); doc.text(fmt(s.tarifa,m),W-pad,y+5,{align:'right'});
+    totalG+=s.tarifa; costoG+=s.costo||0; y+=14;
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      setF('#f3f1eb'); doc.rect(contentX,y-3,contentW,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),contentX+4,y+4); setT(DARK); doc.text(fmt(v.tarifa,m),W-pad,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
+    });
+    if(pais&&!paisesConExtras[s.paisId]){
+      if(pais.courier&&pais.courierTarifa){ setF('#f3f1eb'); doc.rect(contentX,y-3,contentW,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Courier',contentX+4,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad,y+4,{align:'right'}); totalG+=pais.courierTarifa; y+=10; }
+      if(pais.poa&&pais.poaTarifa){ setF('#f3f1eb'); doc.rect(contentX,y-3,contentW,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Power of Attorney',contentX+4,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad,y+4,{align:'right'}); totalG+=pais.poaTarifa; y+=10; }
+      paisesConExtras[s.paisId]=true;
+    }
+    if(s.notas) allNotas.push(s.notas);
+  });
+  y+=6;
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if(notasUnicas.length){ var lines=doc.splitTextToSize(notasUnicas.join(' '),contentW-8); var nH=lines.length*5+12; setF('#f0ede6'); doc.rect(contentX,y,contentW,nH,'F'); var ab2=rgb(ACCENT); doc.setFillColor(ab2[0],ab2[1],ab2[2]); doc.rect(contentX,y,1.5,nH,'F'); doc.setFontSize(6); setT(LIGHT); doc.text('NOTAS',contentX+5,y+6); doc.setFontSize(8); setT(MID); doc.text(lines,contentX+5,y+11); y+=nH+8; }
+  setF(DARK); doc.rect(contentX,y,contentW,20,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(160,160,155); doc.text('TOTAL GENERAL',contentX+6,y+8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad,y+15,{align:'right'});
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Split Clean generado ✓');
+}
+
+// ─── TEMPLATE 10: Rose Gold ────────────────────────────
+function exportarTpl10(validos, ACCENT) {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  var W=210, pad=16;
+  var emp=(_pdfCfg.empresa)||{};
+  var empNombre=emp.nombre||'Mi Empresa', empSub=emp.subtitulo||'', empEmail=emp.email||'', empTel=emp.telefono||'', empWeb=emp.web||'', empCiudad=emp.ciudad||'', empLegal=emp.legal||'Cotización · No constituye factura.';
+  function rgb(h){ return hexToRgb(h); }
+  function setF(h){ var c=rgb(h); doc.setFillColor(c[0],c[1],c[2]); }
+  function setT(h){ var c=rgb(h); doc.setTextColor(c[0],c[1],c[2]); }
+  var BG='#1c1412', HEADER='#231916', TEXT='#e8e4df', MUTED='#7a6e68', BORDER='#3a2e2a', GREEN='#4caf7d';
+  var fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  var cotNum='COT-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  setF(BG); doc.rect(0,0,W,297,'F');
+  setF(HEADER); doc.rect(0,0,W,46,'F');
+  setF(ACCENT); doc.rect(0,45.5,W,1,'F');
+  // Logo cuadrado con inicial
+  setF(ACCENT); doc.rect(pad,8,22,22,'F');
+  var words3=empNombre.trim().split(/\s+/);
+  var init1=words3[0]?words3[0][0].toUpperCase():'M';
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); setT(BG); doc.text(init1,pad+11,23,{align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); setT(TEXT); doc.text(empNombre,pad+28,17);
+  if(empSub){ doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text(empSub,pad+28,24); }
+  var parts3=[]; if(empEmail) parts3.push(empEmail); if(empTel) parts3.push(empTel); if(empWeb) parts3.push(empWeb); if(empCiudad) parts3.push(empCiudad);
+  if(parts3.length){ doc.setFontSize(5.5); setT(MUTED); doc.text(parts3.join('  ·  '),pad+28,30); }
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); setT(ACCENT); doc.text(cotNum,W-pad,13,{align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text(fecha,W-pad,20,{align:'right'});
+  doc.setFontSize(5); setT(MUTED); doc.text('generado con LexQuote',W-pad,42,{align:'right'});
+  var y=56;
+  doc.setFontSize(5.5); setT(MUTED); doc.text('SERVICIOS COTIZADOS',pad,y); y+=6;
+  var totalG=0, costoG=0, monedaG='USD', allNotas=[], paisesConExtras={};
+  validos.forEach(function(s,idx){
+    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
+    var art=window._articulos.find(function(a){ return a.id===s.artId; });
+    var m=s.moneda||'USD'; monedaG=m;
+    var rowBg=idx%2===0?HEADER:BG;
+    setF(rowBg); doc.rect(pad,y-3,W-pad*2,14,'F');
+    var ab=rgb(ACCENT); doc.setFillColor(ab[0],ab[1],ab[2]); doc.rect(pad,y-3,2,14,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); setT(ACCENT); doc.text(pais?pais.nombre:'—',pad+6,y+4);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED); doc.text(art?art.nombre:'Servicio',pad+6,y+9);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(TEXT); doc.text(fmt(s.tarifa,m),W-pad-2,y+6,{align:'right'});
+    totalG+=s.tarifa; costoG+=s.costo||0; y+=15;
+    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
+      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F');
+      var ab2=rgb(ACCENT); doc.setFillColor(ab2[0],ab2[1],ab2[2]); doc.rect(pad,y-3,2,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),pad+6,y+4); setT(TEXT); doc.text(fmt(v.tarifa,m),W-pad-2,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
+    });
+    if(pais&&!paisesConExtras[s.paisId]){
+      if(pais.courier&&pais.courierTarifa){ setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Courier',pad+6,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad-2,y+4,{align:'right'}); totalG+=pais.courierTarifa; y+=10; }
+      if(pais.poa&&pais.poaTarifa){ setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Power of Attorney',pad+6,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad-2,y+4,{align:'right'}); totalG+=pais.poaTarifa; y+=10; }
+      paisesConExtras[s.paisId]=true;
+    }
+    if(s.notas) allNotas.push(s.notas);
+  });
+  y+=6;
+  var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
+  if(notasUnicas.length){ var lines=doc.splitTextToSize(notasUnicas.join(' '),W-pad*2-10); var nH=lines.length*5+12; setF(HEADER); doc.rect(pad,y,W-pad*2,nH,'F'); var ab3=rgb(ACCENT); doc.setFillColor(ab3[0],ab3[1],ab3[2]); doc.rect(pad,y,1.5,nH,'F'); doc.setFontSize(6); setT(MUTED); doc.text('NOTAS',pad+5,y+6); doc.setFontSize(8); setT(MUTED); doc.text(lines,pad+5,y+11); y+=nH+8; }
+  setF(HEADER); doc.rect(pad,y,W-pad*2,22,'F'); var ab4=rgb(ACCENT); doc.setFillColor(ab4[0],ab4[1],ab4[2]); doc.rect(pad,y,3,22,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text('TOTAL GENERAL',pad+8,y+8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad-2,y+15,{align:'right'});
+  setF(BORDER); doc.rect(0,277,W,0.5,'F'); setF(HEADER); doc.rect(0,277.5,W,20,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(empNombre,pad,287);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(MUTED); doc.text(empLegal,W-pad,287,{align:'right'});
+  doc.save('LexQuote-'+cotNum+'.pdf');
+  toast('PDF Rose Gold generado ✓');
+}
 
 // ── Registrar nav buttons con JS (evita ReferenceError por timing de módulo) ──
 document.querySelectorAll('.nav-btn[data-section]').forEach(function(btn) {
