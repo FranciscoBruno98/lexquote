@@ -1484,9 +1484,10 @@ function iniciarListeners(db) {
     poblarSelectProv('comp-proveedor', true);
     renderComparador();
     actualizarStats();
+    if (window._mSvcs && window._mSvcs.length === 0 && window._agentes && window._agentes.length > 0) { mAgregar(); }
   }, err => {
     setSyncState('error', 'Error de sync');
-    toast('Error de sincronización: ' + err.message, 'err');
+    toast('Error de sincronizacion: ' + err.message, 'err');
   });
 
   // Agentes (Proveedores) listener
@@ -1496,7 +1497,7 @@ function iniciarListeners(db) {
     window._agentes.sort((a,b) => (a.prioridad||99) - (b.prioridad||99));
     renderAgentes();
     initCotizador();
-    if (window._mSvcs && window._mSvcs.length === 0) { mAgregar(); }
+    if (window._mSvcs && window._mSvcs.length === 0 && window._proveedores && window._proveedores.length > 0) { mAgregar(); }
     actualizarStats();
   }, err => {
     setSyncState('error', 'Error de sync');
