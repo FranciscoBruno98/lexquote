@@ -3194,38 +3194,54 @@ function exportarTpl1(validos, ACCENT) {
   setF(BORDER); doc.rect(pad, y+1.5, W-pad*2, 0.3, 'F');
   y += 8;
 
+  // FIX 1: Agrupar servicios por país antes de renderizar
+  var paisesOrden = [];
+  var porPais = {};
+  validos.forEach(function(s) {
+    if (!porPais[s.paisId]) { porPais[s.paisId] = []; paisesOrden.push(s.paisId); }
+    porPais[s.paisId].push(s);
+  });
+
   var totalG=0, costoG=0, monedaG='USD', allNotas=[];
-  var paisesConExtras = {}; // rastrea qué países ya tuvieron courier/poa
 
-  validos.forEach(function(s, idx) {
-    var pais = window._proveedores.find(function(p){ return p.id===s.paisId; });
-    var art  = window._articulos.find(function(a){ return a.id===s.artId; });
-    var m = s.moneda||'USD'; monedaG=m;
+  paisesOrden.forEach(function(paisId, idx) {
+    var serviciosPais = porPais[paisId];
+    var pais = window._proveedores.find(function(p){ return p.id===paisId; });
+    var m = serviciosPais[0].moneda||'USD'; monedaG=m;
 
-    // Nombre país
+    // Nombre país — UNA sola vez por grupo
     doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT);
     doc.text(pais ? pais.nombre : '—', pad, y); y+=5;
 
-    // Artículo principal
-    var artNombre = art ? art.nombre : 'Servicio';
-    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
-    doc.text(artNombre, pad+3, y); setT(TEXT);
-    doc.text(fmt(s.tarifa,m), W-pad, y, {align:'right'});
-    setF(BORDER); doc.rect(pad+3, y+1.5, W-pad*2-3, 0.18, 'F');
-    totalG+=s.tarifa; costoG+=s.costo; y+=6;
+    // Todos los servicios de este país
+    serviciosPais.forEach(function(s) {
+      var art = window._articulos.find(function(a){ return a.id===s.artId; });
+      var artNombre = art ? art.nombre : 'Servicio';
 
-    // Vinculados
-    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
-      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+      // FIX 2: imprimir nombre y precio en la misma línea y
       doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
-      doc.text('  ↳ '+(artV?artV.nombre:'Artículo vinculado'), pad+3, y); setT(TEXT);
-      doc.text(fmt(v.tarifa,m), W-pad, y, {align:'right'});
-      setF(BORDER); doc.rect(pad+3,y+1.5,W-pad*2-3,0.18,'F');
-      totalG+=v.tarifa; costoG+=v.costo||0; y+=6;
+      doc.text(artNombre, pad+3, y);
+      setT(TEXT);
+      doc.text(fmt(s.tarifa,m), W-pad, y, {align:'right'});
+      setF(BORDER); doc.rect(pad+3, y+1.5, W-pad*2-3, 0.18, 'F');
+      totalG+=s.tarifa; costoG+=s.costo||0; y+=6;
+
+      // Vinculados — FIX 2: nombre y precio misma línea
+      window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
+        var artV = window._articulos.find(function(a){ return a.id===v.artId; });
+        doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
+        doc.text('  ↳ '+(artV?artV.nombre:'Artículo vinculado'), pad+3, y);
+        setT(TEXT);
+        doc.text(fmt(v.tarifa,m), W-pad, y, {align:'right'});
+        setF(BORDER); doc.rect(pad+3,y+1.5,W-pad*2-3,0.18,'F');
+        totalG+=v.tarifa; costoG+=v.costo||0; y+=6;
+      });
+
+      if (s.notas) allNotas.push(s.notas);
     });
 
-    // Courier y PoA — solo 1 vez por país
-    if (pais && !paisesConExtras[s.paisId]) {
+    // Courier y PoA — una sola vez por país
+    if (pais) {
       if (pais.courier&&pais.courierTarifa) {
         doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
         doc.text('Courier', pad+3, y);
@@ -3242,11 +3258,9 @@ function exportarTpl1(validos, ACCENT) {
         setF(BORDER); doc.rect(pad+3,y+1.5,W-pad*2-3,0.18,'F');
         totalG+=pais.poaTarifa; y+=6;
       }
-      paisesConExtras[s.paisId] = true;
     }
 
-    if (s.notas) allNotas.push(s.notas);
-    if (idx < validos.length-1) { setF(BORDER); doc.rect(pad,y+1,W-pad*2,0.6,'F'); y+=8; }
+    if (idx < paisesOrden.length-1) { setF(BORDER); doc.rect(pad,y+1,W-pad*2,0.6,'F'); y+=8; }
   });
 
   y+=8;
@@ -3264,23 +3278,17 @@ function exportarTpl1(validos, ACCENT) {
     y+=notasH+8;
   }
 
-  // Total box
+  // Total box — FIX 3: sin margen de ganancia
+  var nPaises = paisesOrden.length;
+  var nServicios = validos.length;
   setF(SURFACE2); doc.rect(pad,y,W-pad*2,20,'F');
   var ac2=hexToRgb(ACCENT); doc.setFillColor(ac2[0],ac2[1],ac2[2]); doc.rect(pad,y,1.5,20,'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
   doc.text('TOTAL GENERAL', pad+6, y+8);
   doc.setFontSize(8); setT(MUTED);
-  doc.text(validos.length+' país/es · '+validos.length+' servicio/s', pad+6, y+14);
+  doc.text(nPaises+' país/es · '+nServicios+' servicio/s', pad+6, y+14);
   doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT);
   doc.text(fmt(totalG,monedaG), W-pad-4, y+14, {align:'right'});
-
-  // Margen
-  if (costoG>0) {
-    var dif=totalG-costoG, pct=(dif/costoG)*100;
-    var mc=hexToRgb(dif>=0?GREEN:'#d4695a'); doc.setTextColor(mc[0],mc[1],mc[2]);
-    doc.setFontSize(7);
-    doc.text((pct>=0?'+':'')+pct.toFixed(1)+'% margen', W-pad-4, y+20, {align:'right'});
-  }
 
   y+=28;
 
@@ -3379,61 +3387,50 @@ function exportarTpl2(validos, ACCENT) {
   doc.text('TARIFA', W-pad-12, y+7, {align:'right'});
   y+=10;
 
+  // Agrupar por país
+  var paisesOrden=[]; var porPais={};
+  validos.forEach(function(s){ if(!porPais[s.paisId]){porPais[s.paisId]=[];paisesOrden.push(s.paisId);} porPais[s.paisId].push(s); });
   var totalG=0, costoG=0, monedaG='USD', allNotas=[];
-  var paisesConExtras = {};
 
-  validos.forEach(function(s, idx) {
-    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
-    var art=window._articulos.find(function(a){ return a.id===s.artId; });
-    var m=s.moneda||'USD'; monedaG=m;
-    var rowBg = idx%2===0?'#f8f7f4':'#f1efe9';
+  paisesOrden.forEach(function(paisId, idx) {
+    var serviciosPais=porPais[paisId];
+    var pais=window._proveedores.find(function(p){ return p.id===paisId; });
+    var m=serviciosPais[0].moneda||'USD'; monedaG=m;
+    var rowBg=idx%2===0?'#f8f7f4':'#f1efe9';
 
-    // Fila país
+    // País — una sola vez
     setF(rowBg); doc.rect(pad,y,W-pad-8,10,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(DARK);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(DARK);
     doc.text(pais?pais.nombre:'—', pad+5, y+7);
-    doc.setFont('helvetica','normal'); setT(MID);
-    doc.text(art?art.nombre:'Servicio', pad+42, y+7);
-    doc.setFont('helvetica','bold'); setT(DARK);
-    doc.text(fmt(s.tarifa,m), W-pad-12, y+7, {align:'right'});
     setD(LINE); doc.setLineWidth(0.3); doc.line(pad,y+10,W-pad-8,y+10);
-    totalG+=s.tarifa; costoG+=s.costo; y+=10;
+    y+=10;
 
-    // Vinculados
-    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
-      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+    serviciosPais.forEach(function(s) {
+      var art=window._articulos.find(function(a){ return a.id===s.artId; });
       setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F');
       doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
-      doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), pad+5, y+6.5);
-      doc.text(fmt(v.tarifa,m), W-pad-12, y+6.5, {align:'right'});
+      doc.text(art?art.nombre:'Servicio', pad+5, y+6.5);
+      doc.setFont('helvetica','bold'); setT(DARK);
+      doc.text(fmt(s.tarifa,m), W-pad-12, y+6.5, {align:'right'});
       setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
-      totalG+=v.tarifa; y+=9;
+      totalG+=s.tarifa; costoG+=s.costo||0; y+=9;
+
+      window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
+        var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+        setF('#f0eee8'); doc.rect(pad,y,W-pad-8,9,'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
+        doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), pad+5, y+6.5);
+        doc.text(fmt(v.tarifa,m), W-pad-12, y+6.5, {align:'right'});
+        setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
+        totalG+=v.tarifa; costoG+=v.costo||0; y+=9;
+      });
+      if(s.notas) allNotas.push(s.notas);
     });
 
-    // Courier y PoA — solo 1 vez por país
-    if (pais && !paisesConExtras[s.paisId]) {
-      if (pais.courier&&pais.courierTarifa) {
-        setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F');
-        doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
-        doc.text('  + Courier', pad+5, y+6.5);
-        var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
-        doc.text(fmt(pais.courierTarifa,m), W-pad-12, y+6.5, {align:'right'});
-        setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
-        totalG+=pais.courierTarifa; y+=9;
-      }
-      if (pais.poa&&pais.poaTarifa) {
-        setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F');
-        doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
-        doc.text('  + Power of Attorney (PoA)', pad+5, y+6.5);
-        var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
-        doc.text(fmt(pais.poaTarifa,m), W-pad-12, y+6.5, {align:'right'});
-        setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
-        totalG+=pais.poaTarifa; y+=9;
-      }
-      paisesConExtras[s.paisId] = true;
+    if(pais){
+      if(pais.courier&&pais.courierTarifa){ setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID); doc.text('  + Courier',pad+5,y+6.5); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad-12,y+6.5,{align:'right'}); setD(LINE); doc.line(pad,y+9,W-pad-8,y+9); totalG+=pais.courierTarifa; y+=9; }
+      if(pais.poa&&pais.poaTarifa){ setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID); doc.text('  + Power of Attorney (PoA)',pad+5,y+6.5); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad-12,y+6.5,{align:'right'}); setD(LINE); doc.line(pad,y+9,W-pad-8,y+9); totalG+=pais.poaTarifa; y+=9; }
     }
-
-    if (s.notas) allNotas.push(s.notas);
     y+=2;
   });
 
@@ -3441,23 +3438,14 @@ function exportarTpl2(validos, ACCENT) {
 
   // Notas
   var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
-  if (notasUnicas.length) {
-    var notasTxt=notasUnicas.join(' ');
-    var lines=doc.splitTextToSize(notasTxt,W-pad*2-8);
-    var notasH=lines.length*5+12;
-    setF('#ede9df'); doc.rect(pad,y,W-pad-8,notasH,'F');
-    setF(ACCENT); doc.rect(pad,y,1.5,notasH,'F');
-    doc.setFontSize(6.5); setT(LIGHT); doc.text('NOTAS', pad+5, y+6);
-    doc.setFontSize(8); setT(MID); doc.text(lines,pad+5,y+11);
-    y+=notasH+8;
-  }
+  if(notasUnicas.length){ var notasTxt=notasUnicas.join(' '); var lines=doc.splitTextToSize(notasTxt,W-pad*2-8); var notasH=lines.length*5+12; setF('#ede9df'); doc.rect(pad,y,W-pad-8,notasH,'F'); setF(ACCENT); doc.rect(pad,y,1.5,notasH,'F'); doc.setFontSize(6.5); setT(LIGHT); doc.text('NOTAS',pad+5,y+6); doc.setFontSize(8); setT(MID); doc.text(lines,pad+5,y+11); y+=notasH+8; }
 
-  // Total
+  // Total — sin margen
+  var nPaises=paisesOrden.length, nServicios=validos.length;
   setF(ACCENT); doc.rect(pad,y,W-pad-8,20,'F');
-  doc.setFont('helvetica','normal'); doc.setFontSize(7);
-  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(255,255,255);
   doc.text('TOTAL GENERAL', pad+6, y+8);
-  doc.setFontSize(7.5); doc.text(validos.length+' país/es', pad+6, y+14);
+  doc.setFontSize(7.5); doc.text(nPaises+' país/es · '+nServicios+' servicio/s', pad+6, y+14);
   doc.setFont('helvetica','bold'); doc.setFontSize(18);
   doc.text(fmt(totalG,monedaG), W-pad-12, y+14, {align:'right'});
   y+=28;
@@ -3561,60 +3549,50 @@ function exportarTpl3(validos, ACCENT) {
   doc.text('SERVICIOS COTIZADOS', contentX, y); y+=6;
 
   var totalG=0, costoG=0, monedaG='USD', allNotas=[];
-  var paisesConExtras = {};
 
-  validos.forEach(function(s, idx) {
-    var pais=window._proveedores.find(function(p){ return p.id===s.paisId; });
-    var art =window._articulos.find(function(a){ return a.id===s.artId; });
-    var m=s.moneda||'USD'; monedaG=m;
+  // Agrupar por país
+  var paisesOrden2=[]; var porPais2={};
+  validos.forEach(function(s){ if(!porPais2[s.paisId]){porPais2[s.paisId]=[];paisesOrden2.push(s.paisId);} porPais2[s.paisId].push(s); });
 
-    // Fila alternada
+  paisesOrden2.forEach(function(paisId, idx) {
+    var serviciosPais=porPais2[paisId];
+    var pais=window._proveedores.find(function(p){ return p.id===paisId; });
+    var m=serviciosPais[0].moneda||'USD'; monedaG=m;
     var rowBg=idx%2===0?SURFACE:SURFACE2;
-    setF(rowBg); doc.rect(contentX,y,contentW,12,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
-    doc.text(pais?pais.nombre:'—', contentX+4, y+5);
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
-    doc.text(art?art.nombre:'Servicio', contentX+4, y+10);
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(TEXT);
-    doc.text(fmt(s.tarifa,m), W-pad, y+8, {align:'right'});
-    setF(BORDER); doc.rect(contentX,y+12,contentW,0.3,'F');
-    totalG+=s.tarifa; costoG+=s.costo||0; y+=13;
 
-    // Vinculados
-    window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
-      var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+    // País — una sola vez, fila bold
+    setF(rowBg); doc.rect(contentX,y,contentW,10,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT);
+    doc.text(pais?pais.nombre:'—', contentX+4, y+7);
+    setF(BORDER); doc.rect(contentX,y+10,contentW,0.3,'F');
+    y+=10;
+
+    serviciosPais.forEach(function(s) {
+      var art=window._articulos.find(function(a){ return a.id===s.artId; });
       setF(BG); doc.rect(contentX,y,contentW,10,'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
-      doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), contentX+4, y+7);
-      setT(TEXT); doc.text(fmt(v.tarifa,m), W-pad, y+7, {align:'right'});
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
+      doc.text(art?art.nombre:'Servicio', contentX+4, y+7);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(TEXT);
+      doc.text(fmt(s.tarifa,m), W-pad, y+7, {align:'right'});
       setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
-      totalG+=v.tarifa; y+=11;
+      totalG+=s.tarifa; costoG+=s.costo||0; y+=10;
+
+      window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
+        var artV=window._articulos.find(function(a){ return a.id===v.artId; });
+        setF(BG); doc.rect(contentX,y,contentW,10,'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
+        doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), contentX+4, y+7);
+        setT(TEXT); doc.text(fmt(v.tarifa,m), W-pad, y+7, {align:'right'});
+        setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
+        totalG+=v.tarifa; costoG+=v.costo||0; y+=10;
+      });
+      if(s.notas) allNotas.push(s.notas);
     });
 
-    // Courier y PoA — solo 1 vez por país
-    if (pais && !paisesConExtras[s.paisId]) {
-      if (pais.courier&&pais.courierTarifa) {
-        setF(BG); doc.rect(contentX,y,contentW,10,'F');
-        doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
-        doc.text('  + Courier', contentX+4, y+7);
-        var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
-        doc.text(fmt(pais.courierTarifa,m), W-pad, y+7, {align:'right'});
-        setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
-        totalG+=pais.courierTarifa; y+=11;
-      }
-      if (pais.poa&&pais.poaTarifa) {
-        setF(BG); doc.rect(contentX,y,contentW,10,'F');
-        doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
-        doc.text('  + Power of Attorney (PoA)', contentX+4, y+7);
-        var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]);
-        doc.text(fmt(pais.poaTarifa,m), W-pad, y+7, {align:'right'});
-        setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
-        totalG+=pais.poaTarifa; y+=11;
-      }
-      paisesConExtras[s.paisId] = true;
+    if(pais){
+      if(pais.courier&&pais.courierTarifa){ setF(BG); doc.rect(contentX,y,contentW,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Courier',contentX+4,y+7); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad,y+7,{align:'right'}); setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F'); totalG+=pais.courierTarifa; y+=10; }
+      if(pais.poa&&pais.poaTarifa){ setF(BG); doc.rect(contentX,y,contentW,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Power of Attorney (PoA)',contentX+4,y+7); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.poaTarifa,m),W-pad,y+7,{align:'right'}); setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F'); totalG+=pais.poaTarifa; y+=10; }
     }
-
-    if (s.notas) allNotas.push(s.notas);
     y+=3;
   });
 
@@ -3622,34 +3600,18 @@ function exportarTpl3(validos, ACCENT) {
 
   // Notas
   var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
-  if (notasUnicas.length) {
-    var notasTxt=notasUnicas.join(' ');
-    var lines=doc.splitTextToSize(notasTxt,contentW-8);
-    var notasH=lines.length*5+12;
-    setF(SURFACE); doc.rect(contentX,y,contentW,notasH,'F');
-    setF(ACCENT); doc.rect(contentX,y,1.5,notasH,'F');
-    doc.setFontSize(6.5); setT(DIM); doc.text('NOTAS', contentX+5, y+6);
-    doc.setFontSize(8); setT(MUTED); doc.text(lines,contentX+5,y+11);
-    y+=notasH+8;
-  }
+  if(notasUnicas.length){ var notasTxt=notasUnicas.join(' '); var lines=doc.splitTextToSize(notasTxt,contentW-8); var notasH=lines.length*5+12; setF(SURFACE); doc.rect(contentX,y,contentW,notasH,'F'); setF(ACCENT); doc.rect(contentX,y,1.5,notasH,'F'); doc.setFontSize(6.5); setT(DIM); doc.text('NOTAS',contentX+5,y+6); doc.setFontSize(8); setT(MUTED); doc.text(lines,contentX+5,y+11); y+=notasH+8; }
 
-  // Total box
+  // Total — sin margen
+  var nPaises3=paisesOrden2.length, nServicios3=validos.length;
   setF(SURFACE2); doc.rect(contentX,y,contentW,22,'F');
   setF(ACCENT); doc.rect(contentX,y,2,22,'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
   doc.text('TOTAL GENERAL', contentX+6, y+8);
   doc.setFontSize(8); setT(MUTED);
-  doc.text(validos.length+' país/es · '+validos.length+' servicio/s', contentX+6, y+15);
+  doc.text(nPaises3+' país/es · '+nServicios3+' servicio/s', contentX+6, y+15);
   doc.setFont('helvetica','bold'); doc.setFontSize(20); setT(ACCENT);
   doc.text(fmt(totalG,monedaG), W-pad, y+16, {align:'right'});
-
-  // Margen
-  if (costoG>0) {
-    var dif=totalG-costoG, pct=(dif/costoG)*100;
-    var mc=rgb(dif>=0?GREEN:'#d4695a'); doc.setTextColor(mc[0],mc[1],mc[2]);
-    doc.setFontSize(7);
-    doc.text((pct>=0?'+':'')+pct.toFixed(1)+'% margen', W-pad, y+22, {align:'right'});
-  }
 
   y+=30;
 
