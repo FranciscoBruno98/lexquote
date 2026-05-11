@@ -1313,7 +1313,7 @@ window.pdfSanitize = function(str) {
   // Arrows and symbols
   s = s.replace(/↳|→|←|↑|↓/g, '>');
   // Remove any remaining non-ASCII
-  s = s.replace(/[^ -]/g, '?');
+  s = s.replace(/[\u0080-\uFFFF]/g, '');
   return s;
 };
 
