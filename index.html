@@ -1291,6 +1291,21 @@ window._editingAgente = null;
 // ══════════════════════════════════════════
 window.uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 
+// Sanitize text for jsPDF (remove unsupported Unicode chars)
+window.pdfSanitize = function(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/[áàäâã]/g, 'a').replace(/[ÁÀÄÂÃ]/g, 'A')
+    .replace(/[éèëê]/g, 'e').replace(/[ÉÈËÊ]/g, 'E')
+    .replace(/[íìïî]/g, 'i').replace(/[ÍÌÏÎ]/g, 'I')
+    .replace(/[óòöôõ]/g, 'o').replace(/[ÓÒÖÔÕ]/g, 'O')
+    .replace(/[úùüû]/g, 'u').replace(/[ÚÙÜÛ]/g, 'U')
+    .replace(/[ñ]/g, 'n').replace(/[Ñ]/g, 'N')
+    .replace(/[ç]/g, 'c').replace(/[Ç]/g, 'C')
+    .replace(/[↳→←↑↓►◄▲▼]/g, '>')
+    .replace(/[^ -]/g, '?');
+};
+
 window.fmt = (n, moneda) => {
   if (n === null || n === undefined || n === '' || isNaN(n)) return '—';
   const sym = { USD:'$', EUR:'€', ARS:'$', GBP:'£', BRL:'R$', MXN:'$', CLP:'$', COP:'$' };
@@ -3154,13 +3169,13 @@ function exportarTpl1(validos, ACCENT) {
 
   // Nombre empresa (protagonista)
   doc.setFont('helvetica','bold'); doc.setFontSize(20); setT(ACCENT);
-  doc.text(empNombre, pad, 15);
+  doc.text(pdfSanitize(empNombre), pad, 15);
   var yH = 15;
 
   // Subtítulo
   if (empSub) {
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED);
-    doc.text(empSub, pad, 22); yH = 22;
+    doc.text(pdfSanitize(empSub), pad, 22); yH = 22;
   }
 
   // Datos de contacto en una línea
@@ -3211,7 +3226,7 @@ function exportarTpl1(validos, ACCENT) {
 
     // Nombre país — UNA sola vez por grupo
     doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT);
-    doc.text(pais ? pais.nombre : '—', pad, y); y+=5;
+    doc.text(pdfSanitize(pais ? pais.nombre : '—'), pad, y); y+=5;
 
     // Todos los servicios de este país
     serviciosPais.forEach(function(s) {
@@ -3220,7 +3235,7 @@ function exportarTpl1(validos, ACCENT) {
 
       // FIX 2: imprimir nombre y precio en la misma línea y
       doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
-      doc.text(artNombre, pad+3, y);
+      doc.text(pdfSanitize(artNombre), pad+3, y);
       setT(TEXT);
       doc.text(fmt(s.tarifa,m), W-pad, y, {align:'right'});
       setF(BORDER); doc.rect(pad+3, y+1.5, W-pad*2-3, 0.18, 'F');
@@ -3230,7 +3245,7 @@ function exportarTpl1(validos, ACCENT) {
       window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v) {
         var artV = window._articulos.find(function(a){ return a.id===v.artId; });
         doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
-        doc.text('  ↳ '+(artV?artV.nombre:'Artículo vinculado'), pad+3, y);
+        doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Articulo vinculado')), pad+3, y);
         setT(TEXT);
         doc.text(fmt(v.tarifa,m), W-pad, y, {align:'right'});
         setF(BORDER); doc.rect(pad+3,y+1.5,W-pad*2-3,0.18,'F');
@@ -3268,7 +3283,7 @@ function exportarTpl1(validos, ACCENT) {
   // Notas
   var notasUnicas = allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
   if (notasUnicas.length) {
-    var notasTxt = notasUnicas.join(' ');
+    var notasTxt = pdfSanitize(notasUnicas.join(' '));
     var lines = doc.splitTextToSize(notasTxt, W-pad*2-12);
     var notasH = lines.length*4.8+12;
     setF(SURFACE); doc.rect(pad,y,W-pad*2,notasH,'F');
@@ -3296,9 +3311,9 @@ function exportarTpl1(validos, ACCENT) {
   setF(BORDER); doc.rect(0,280,W,0.4,'F');
   setF(SURFACE); doc.rect(0,280.4,W,17,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
-  doc.text(empNombre, pad, 289);
+  doc.text(pdfSanitize(empNombre), pad, 289);
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
-  doc.text(empLegal, W-pad, 289, {align:'right'});
+  doc.text(pdfSanitize(empLegal), W-pad, 289, {align:'right'});
   // LexQuote branding — muy discreto
   doc.setFontSize(5); setT('#222320');
   doc.text('generado con LexQuote', pad, 294);
@@ -3401,7 +3416,7 @@ function exportarTpl2(validos, ACCENT) {
     // País — una sola vez
     setF(rowBg); doc.rect(pad,y,W-pad-8,10,'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(DARK);
-    doc.text(pais?pais.nombre:'—', pad+5, y+7);
+    doc.text(pdfSanitize(pais?pais.nombre:'—'), pad+5, y+7);
     setD(LINE); doc.setLineWidth(0.3); doc.line(pad,y+10,W-pad-8,y+10);
     y+=10;
 
@@ -3409,7 +3424,7 @@ function exportarTpl2(validos, ACCENT) {
       var art=window._articulos.find(function(a){ return a.id===s.artId; });
       setF('#f5f3ee'); doc.rect(pad,y,W-pad-8,9,'F');
       doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
-      doc.text(art?art.nombre:'Servicio', pad+5, y+6.5);
+      doc.text(pdfSanitize(art?art.nombre:'Servicio'), pad+5, y+6.5);
       doc.setFont('helvetica','bold'); setT(DARK);
       doc.text(fmt(s.tarifa,m), W-pad-12, y+6.5, {align:'right'});
       setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
@@ -3419,7 +3434,7 @@ function exportarTpl2(validos, ACCENT) {
         var artV=window._articulos.find(function(a){ return a.id===v.artId; });
         setF('#f0eee8'); doc.rect(pad,y,W-pad-8,9,'F');
         doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MID);
-        doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), pad+5, y+6.5);
+        doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Vinculado')), pad+5, y+6.5);
         doc.text(fmt(v.tarifa,m), W-pad-12, y+6.5, {align:'right'});
         setD(LINE); doc.line(pad,y+9,W-pad-8,y+9);
         totalG+=v.tarifa; costoG+=v.costo||0; y+=9;
@@ -3438,7 +3453,7 @@ function exportarTpl2(validos, ACCENT) {
 
   // Notas
   var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
-  if(notasUnicas.length){ var notasTxt=notasUnicas.join(' '); var lines=doc.splitTextToSize(notasTxt,W-pad*2-8); var notasH=lines.length*5+12; setF('#ede9df'); doc.rect(pad,y,W-pad-8,notasH,'F'); setF(ACCENT); doc.rect(pad,y,1.5,notasH,'F'); doc.setFontSize(6.5); setT(LIGHT); doc.text('NOTAS',pad+5,y+6); doc.setFontSize(8); setT(MID); doc.text(lines,pad+5,y+11); y+=notasH+8; }
+  if(notasUnicas.length){ var notasTxt=pdfSanitize(notasUnicas.join(' ')); var lines=doc.splitTextToSize(notasTxt,W-pad*2-8); var notasH=lines.length*5+12; setF('#ede9df'); doc.rect(pad,y,W-pad-8,notasH,'F'); setF(ACCENT); doc.rect(pad,y,1.5,notasH,'F'); doc.setFontSize(6.5); setT(LIGHT); doc.text('NOTAS',pad+5,y+6); doc.setFontSize(8); setT(MID); doc.text(lines,pad+5,y+11); y+=notasH+8; }
 
   // Total — sin margen
   var nPaises=paisesOrden.length, nServicios=validos.length;
@@ -3453,9 +3468,9 @@ function exportarTpl2(validos, ACCENT) {
   // Footer
   setD(LINE); doc.setLineWidth(0.4); doc.line(pad, 280, W-pad, 280);
   doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT);
-  doc.text(empNombre, pad, 288);
+  doc.text(pdfSanitize(empNombre), pad, 288);
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(LIGHT);
-  doc.text(empLegal, W-pad, 288, {align:'right'});
+  doc.text(pdfSanitize(empLegal), W-pad, 288, {align:'right'});
   doc.setFontSize(5); setT(LINE);
   doc.text('generado con LexQuote', pad, 293);
 
@@ -3525,12 +3540,12 @@ function exportarTpl3(validos, ACCENT) {
   // ── Área de contenido ──
   // Nombre empresa — protagonista
   doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(TEXT);
-  doc.text(empNombre, contentX, 16);
+  doc.text(pdfSanitize(empNombre), contentX, 16);
 
   var yH = 16;
   if (empSub) {
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setT(MUTED);
-    doc.text(empSub, contentX, 23); yH = 23;
+    doc.text(pdfSanitize(empSub), contentX, 23); yH = 23;
   }
 
   // COT y fecha (derecha)
@@ -3563,7 +3578,7 @@ function exportarTpl3(validos, ACCENT) {
     // País — una sola vez, fila bold
     setF(rowBg); doc.rect(contentX,y,contentW,10,'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT);
-    doc.text(pais?pais.nombre:'—', contentX+4, y+7);
+    doc.text(pdfSanitize(pais?pais.nombre:'—'), contentX+4, y+7);
     setF(BORDER); doc.rect(contentX,y+10,contentW,0.3,'F');
     y+=10;
 
@@ -3571,7 +3586,7 @@ function exportarTpl3(validos, ACCENT) {
       var art=window._articulos.find(function(a){ return a.id===s.artId; });
       setF(BG); doc.rect(contentX,y,contentW,10,'F');
       doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setT(MUTED);
-      doc.text(art?art.nombre:'Servicio', contentX+4, y+7);
+      doc.text(pdfSanitize(art?art.nombre:'Servicio'), contentX+4, y+7);
       doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(TEXT);
       doc.text(fmt(s.tarifa,m), W-pad, y+7, {align:'right'});
       setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
@@ -3581,7 +3596,7 @@ function exportarTpl3(validos, ACCENT) {
         var artV=window._articulos.find(function(a){ return a.id===v.artId; });
         setF(BG); doc.rect(contentX,y,contentW,10,'F');
         doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED);
-        doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), contentX+4, y+7);
+        doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Vinculado')), contentX+4, y+7);
         setT(TEXT); doc.text(fmt(v.tarifa,m), W-pad, y+7, {align:'right'});
         setF(BORDER); doc.rect(contentX,y+10,contentW,0.2,'F');
         totalG+=v.tarifa; costoG+=v.costo||0; y+=10;
@@ -3600,7 +3615,7 @@ function exportarTpl3(validos, ACCENT) {
 
   // Notas
   var notasUnicas=allNotas.filter(function(n,i){ return allNotas.indexOf(n)===i; });
-  if(notasUnicas.length){ var notasTxt=notasUnicas.join(' '); var lines=doc.splitTextToSize(notasTxt,contentW-8); var notasH=lines.length*5+12; setF(SURFACE); doc.rect(contentX,y,contentW,notasH,'F'); setF(ACCENT); doc.rect(contentX,y,1.5,notasH,'F'); doc.setFontSize(6.5); setT(DIM); doc.text('NOTAS',contentX+5,y+6); doc.setFontSize(8); setT(MUTED); doc.text(lines,contentX+5,y+11); y+=notasH+8; }
+  if(notasUnicas.length){ var notasTxt=pdfSanitize(notasUnicas.join(' ')); var lines=doc.splitTextToSize(notasTxt,contentW-8); var notasH=lines.length*5+12; setF(SURFACE); doc.rect(contentX,y,contentW,notasH,'F'); setF(ACCENT); doc.rect(contentX,y,1.5,notasH,'F'); doc.setFontSize(6.5); setT(DIM); doc.text('NOTAS',contentX+5,y+6); doc.setFontSize(8); setT(MUTED); doc.text(lines,contentX+5,y+11); y+=notasH+8; }
 
   // Total — sin margen
   var nPaises3=paisesOrden2.length, nServicios3=validos.length;
@@ -3618,9 +3633,9 @@ function exportarTpl3(validos, ACCENT) {
   // Footer
   setF(BORDER); doc.rect(contentX,278,contentW,0.4,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT);
-  doc.text(empNombre, contentX, 286);
+  doc.text(pdfSanitize(empNombre), contentX, 286);
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(DIM);
-  doc.text(empLegal, W-pad, 286, {align:'right'});
+  doc.text(pdfSanitize(empLegal), W-pad, 286, {align:'right'});
 
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Bold Modern generado ✓');
@@ -3645,8 +3660,8 @@ function exportarTpl4(validos, ACCENT) {
   var ac=rgb(ACCENT); doc.setFillColor(ac[0],ac[1],ac[2]); doc.rect(0,0,W,1.5,'F');
   // Header
   doc.setFont('times','bold'); doc.setFontSize(20); setT(DARK);
-  doc.text(empNombre, pad, 16);
-  if (empSub){ doc.setFont('times','normal'); doc.setFontSize(7); setT(LIGHT); doc.text(empSub, pad, 23); }
+  doc.text(pdfSanitize(empNombre), pad, 16);
+  if (empSub){ doc.setFont('times','normal'); doc.setFontSize(7); setT(LIGHT); doc.text(pdfSanitize(empSub), pad, 23); }
   var parts=[]; if(empEmail) parts.push(empEmail); if(empTel) parts.push(empTel); if(empWeb) parts.push(empWeb); if(empCiudad) parts.push(empCiudad);
   if(parts.length){ doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(parts.join('  ·  '), pad, 29); }
   doc.setFont('helvetica','bold'); doc.setFontSize(11); setT(ACCENT);
@@ -3665,16 +3680,16 @@ function exportarTpl4(validos, ACCENT) {
     var rowBg=idx%2===0?'#f3f1ec':'#faf9f6';
     setF(rowBg); doc.rect(pad,y-4,W-pad*2,12,'F');
     doc.setFont('times','bold'); doc.setFontSize(10); setT(ACCENT);
-    doc.text(pais?pais.nombre:'—', pad+4, y+3);
+    doc.text(pdfSanitize(pais?pais.nombre:'—'), pad+4, y+3);
     doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID);
-    doc.text(art?art.nombre:'Servicio', pad+48, y+3);
+    doc.text(pdfSanitize(art?art.nombre:'Servicio'), pad+48, y+3);
     doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(DARK);
     doc.text(fmt(s.tarifa,m), W-pad-2, y+3, {align:'right'});
     totalG+=s.tarifa; costoG+=s.costo||0; y+=12;
     window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
       var artV=window._articulos.find(function(a){ return a.id===v.artId; });
       doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID);
-      doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'), pad+4, y+2);
+      doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Vinculado')), pad+4, y+2);
       setT(DARK); doc.text(fmt(v.tarifa,m), W-pad-2, y+2, {align:'right'});
       totalG+=v.tarifa; y+=9;
     });
@@ -3694,7 +3709,7 @@ function exportarTpl4(validos, ACCENT) {
   doc.setFont('times','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad-2,y+14,{align:'right'});
   // Footer
   setD(LINE); doc.setLineWidth(0.4); doc.line(pad,280,W-pad,280);
-  doc.setFont('times','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(empNombre,pad,288);
+  doc.setFont('times','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(pdfSanitize(empNombre),pad,288);
   doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(empLegal,W-pad,288,{align:'right'});
   doc.setFontSize(5); setT(LINE); doc.text('generado con LexQuote',pad,293);
   doc.save('LexQuote-'+cotNum+'.pdf');
@@ -3717,7 +3732,7 @@ function exportarTpl5(validos, ACCENT) {
   setF(BG); doc.rect(0,0,W,297,'F');
   setF(HEADER); doc.rect(0,0,W,40,'F');
   setF(ACCENT); doc.rect(0,39.5,W,1,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(TEXT); doc.text(empNombre,pad,16);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(TEXT); doc.text(pdfSanitize(empNombre),pad,16);
   if(empSub){ doc.setFont('helvetica','normal'); doc.setFontSize(7); setT(MUTED); doc.text(empSub,pad,23); }
   var parts=[]; if(empEmail) parts.push(empEmail); if(empTel) parts.push(empTel); if(empWeb) parts.push(empWeb); if(empCiudad) parts.push(empCiudad);
   if(parts.length){ doc.setFontSize(6); setT(MUTED); doc.text(parts.join('  ·  '),pad,29); }
@@ -3740,7 +3755,7 @@ function exportarTpl5(validos, ACCENT) {
     window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
       var artV=window._articulos.find(function(a){ return a.id===v.artId; });
       setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),pad+4,y+3);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Vinculado')),pad+4,y+3);
       setT(TEXT); doc.text(fmt(v.tarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=v.tarifa; y+=10;
     });
     if(pais&&!paisesConExtras[s.paisId]){
@@ -3757,7 +3772,7 @@ function exportarTpl5(validos, ACCENT) {
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text('TOTAL GENERAL',pad+6,y+8);
   doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad-2,y+16,{align:'right'});
   setF(BORDER); doc.rect(0,278,W,0.4,'F'); setF(HEADER); doc.rect(0,278.4,W,19,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(empNombre,pad,287);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(pdfSanitize(empNombre),pad,287);
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text(empLegal,W-pad,287,{align:'right'});
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Night Blue generado ✓');
@@ -3779,7 +3794,7 @@ function exportarTpl6(validos, ACCENT) {
   setF(BG); doc.rect(0,0,W,297,'F');
   // Banda 1: oscura
   setF(DARK); doc.rect(0,0,W,24,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(255,255,255); doc.text(empNombre,pad,16);
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(255,255,255); doc.text(pdfSanitize(empNombre),pad,16);
   doc.setFont('helvetica','bold'); doc.setFontSize(10); setT(ACCENT); doc.text(cotNum,W-pad,14,{align:'right'});
   // Banda 2: acento
   setF(ACCENT); doc.rect(0,24,W,14,'F');
@@ -3805,7 +3820,7 @@ function exportarTpl6(validos, ACCENT) {
     window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
       var artV=window._articulos.find(function(a){ return a.id===v.artId; });
       setF('#f3f1eb'); doc.rect(pad,y-3,W-pad*2,9,'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),pad+4,y+3); doc.text(fmt(v.tarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=v.tarifa; y+=9;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Vinculado')),pad+4,y+3); doc.text(fmt(v.tarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=v.tarifa; y+=9;
     });
     if(pais&&!paisesConExtras[s.paisId]){
       if(pais.courier&&pais.courierTarifa){ setF('#f3f1eb'); doc.rect(pad,y-3,W-pad*2,9,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Courier',pad+4,y+3); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad-2,y+3,{align:'right'}); totalG+=pais.courierTarifa; y+=9; }
@@ -3821,7 +3836,7 @@ function exportarTpl6(validos, ACCENT) {
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(160,160,155); doc.text('TOTAL GENERAL',pad+6,y+8);
   doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad-2,y+15,{align:'right'});
   setF(LINE); doc.rect(pad,278,W-pad*2,0.4,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(empNombre,pad,287);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(pdfSanitize(empNombre),pad,287);
   doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(empLegal,W-pad,287,{align:'right'});
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Double Header generado ✓');
@@ -3879,7 +3894,7 @@ function exportarTpl7(validos, ACCENT) {
     window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
       var artV=window._articulos.find(function(a){ return a.id===v.artId; });
       setF(BG); doc.rect(contentX,y-3,contentW,10,'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),contentX+4,y+4); setT(TEXT); doc.text(fmt(v.tarifa,m),W-pad,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Vinculado')),contentX+4,y+4); setT(TEXT); doc.text(fmt(v.tarifa,m),W-pad,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
     });
     if(pais&&!paisesConExtras[s.paisId]){
       if(pais.courier&&pais.courierTarifa){ setF(BG); doc.rect(contentX,y-3,contentW,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Courier',contentX+4,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad,y+4,{align:'right'}); totalG+=pais.courierTarifa; y+=10; }
@@ -3958,7 +3973,7 @@ function exportarTpl8(validos, ACCENT) {
   doc.setFont('courier','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad,y+6,{align:'right'}); y+=14;
   setF(DARK); doc.rect(pad,278,W-pad*2,1,'F');
   setF(ACCENT); doc.rect(pad,279.5,W-pad*2,0.4,'F');
-  doc.setFont('courier','bold'); doc.setFontSize(8); setT(DARK); doc.text(empNombre,pad,287);
+  doc.setFont('courier','bold'); doc.setFontSize(8); setT(DARK); doc.text(pdfSanitize(empNombre),pad,287);
   doc.setFont('courier','normal'); doc.setFontSize(6); setT(LIGHT); doc.text(empLegal,W-pad,287,{align:'right'});
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Typewriter generado ✓');
@@ -4014,7 +4029,7 @@ function exportarTpl9(validos, ACCENT) {
     window._mSvcs.filter(function(x){ return x.linkedTo===s.id&&x.tipoExtra==='vinculado'&&x.tarifa; }).forEach(function(v){
       var artV=window._articulos.find(function(a){ return a.id===v.artId; });
       setF('#f3f1eb'); doc.rect(contentX,y-3,contentW,10,'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),contentX+4,y+4); setT(DARK); doc.text(fmt(v.tarifa,m),W-pad,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Vinculado')),contentX+4,y+4); setT(DARK); doc.text(fmt(v.tarifa,m),W-pad,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
     });
     if(pais&&!paisesConExtras[s.paisId]){
       if(pais.courier&&pais.courierTarifa){ setF('#f3f1eb'); doc.rect(contentX,y-3,contentW,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MID); doc.text('  + Courier',contentX+4,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad,y+4,{align:'right'}); totalG+=pais.courierTarifa; y+=10; }
@@ -4079,7 +4094,7 @@ function exportarTpl10(validos, ACCENT) {
       var artV=window._articulos.find(function(a){ return a.id===v.artId; });
       setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F');
       var ab2=rgb(ACCENT); doc.setFillColor(ab2[0],ab2[1],ab2[2]); doc.rect(pad,y-3,2,10,'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  ↳ '+(artV?artV.nombre:'Vinculado'),pad+6,y+4); setT(TEXT); doc.text(fmt(v.tarifa,m),W-pad-2,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text(pdfSanitize('  > '+(artV?artV.nombre:'Vinculado')),pad+6,y+4); setT(TEXT); doc.text(fmt(v.tarifa,m),W-pad-2,y+4,{align:'right'}); totalG+=v.tarifa; y+=10;
     });
     if(pais&&!paisesConExtras[s.paisId]){
       if(pais.courier&&pais.courierTarifa){ setF(BG); doc.rect(pad,y-3,W-pad*2,10,'F'); doc.setFont('helvetica','normal'); doc.setFontSize(8); setT(MUTED); doc.text('  + Courier',pad+6,y+4); var gc=rgb(GREEN); doc.setTextColor(gc[0],gc[1],gc[2]); doc.text(fmt(pais.courierTarifa,m),W-pad-2,y+4,{align:'right'}); totalG+=pais.courierTarifa; y+=10; }
@@ -4095,7 +4110,7 @@ function exportarTpl10(validos, ACCENT) {
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setT(MUTED); doc.text('TOTAL GENERAL',pad+8,y+8);
   doc.setFont('helvetica','bold'); doc.setFontSize(18); setT(ACCENT); doc.text(fmt(totalG,monedaG),W-pad-2,y+15,{align:'right'});
   setF(BORDER); doc.rect(0,277,W,0.5,'F'); setF(HEADER); doc.rect(0,277.5,W,20,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(empNombre,pad,287);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setT(ACCENT); doc.text(pdfSanitize(empNombre),pad,287);
   doc.setFont('helvetica','normal'); doc.setFontSize(6); setT(MUTED); doc.text(empLegal,W-pad,287,{align:'right'});
   doc.save('LexQuote-'+cotNum+'.pdf');
   toast('PDF Rose Gold generado ✓');
