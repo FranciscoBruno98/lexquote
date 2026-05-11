@@ -1294,16 +1294,27 @@ window.uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,
 // Sanitize text for jsPDF (remove unsupported Unicode chars)
 window.pdfSanitize = function(str) {
   if (!str) return '';
-  return String(str)
-    .replace(/[áàäâã]/g, 'a').replace(/[ÁÀÄÂÃ]/g, 'A')
-    .replace(/[éèëê]/g, 'e').replace(/[ÉÈËÊ]/g, 'E')
-    .replace(/[íìïî]/g, 'i').replace(/[ÍÌÏÎ]/g, 'I')
-    .replace(/[óòöôõ]/g, 'o').replace(/[ÓÒÖÔÕ]/g, 'O')
-    .replace(/[úùüû]/g, 'u').replace(/[ÚÙÜÛ]/g, 'U')
-    .replace(/[ñ]/g, 'n').replace(/[Ñ]/g, 'N')
-    .replace(/[ç]/g, 'c').replace(/[Ç]/g, 'C')
-    .replace(/[↳→←↑↓►◄▲▼]/g, '>')
-    .replace(/[^ -]/g, '?');
+  var s = String(str);
+  // Vowels with accents
+  s = s.replace(/á|à|ä|â|ã/g, 'a');
+  s = s.replace(/Á|À|Ä|Â|Ã/g, 'A');
+  s = s.replace(/é|è|ë|ê/g, 'e');
+  s = s.replace(/É|È|Ë|Ê/g, 'E');
+  s = s.replace(/í|ì|ï|î/g, 'i');
+  s = s.replace(/Í|Ì|Ï|Î/g, 'I');
+  s = s.replace(/ó|ò|ö|ô|õ/g, 'o');
+  s = s.replace(/Ó|Ò|Ö|Ô|Õ/g, 'O');
+  s = s.replace(/ú|ù|ü|û/g, 'u');
+  s = s.replace(/Ú|Ù|Ü|Û/g, 'U');
+  s = s.replace(/ñ/g, 'n');
+  s = s.replace(/Ñ/g, 'N');
+  s = s.replace(/ç/g, 'c');
+  s = s.replace(/Ç/g, 'C');
+  // Arrows and symbols
+  s = s.replace(/↳|→|←|↑|↓/g, '>');
+  // Remove any remaining non-ASCII
+  s = s.replace(/[^ -]/g, '?');
+  return s;
 };
 
 window.fmt = (n, moneda) => {
