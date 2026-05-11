@@ -1485,6 +1485,7 @@ function iniciarListeners(db) {
     renderComparador();
     actualizarStats();
     if (window._mSvcs && window._mSvcs.length === 0 && window._agentes && window._agentes.length > 0) { mAgregar(); }
+    mRefrescarSelectoresPais();
   }, err => {
     setSyncState('error', 'Error de sync');
     toast('Error de sincronizacion: ' + err.message, 'err');
@@ -2235,10 +2236,25 @@ window._mSvcs = [];
 function mUID() { return Date.now().toString(36) + Math.random().toString(36).slice(2,4); }
 
 function mPaisOpts() {
-  return '<option value="">— Seleccionar país —</option>' +
+  if (!window._proveedores || window._proveedores.length === 0) {
+    return '<option value="">⏳ Cargando paises...</option>';
+  }
+  return '<option value="">— Seleccionar pais —</option>' +
     window._proveedores.map(function(p) {
       return '<option value="' + p.id + '">' + esc(p.nombre) + '</option>';
     }).join('');
+}
+
+// Actualizar selectores de país en el cotizador cuando cargan los proveedores
+function mRefrescarSelectoresPais() {
+  document.querySelectorAll('#cotizador-servicios select').forEach(function(sel) {
+    if (sel.getAttribute('onchange') && sel.getAttribute('onchange').indexOf('mOnPais') !== -1) {
+      var currentVal = sel.value;
+      sel.innerHTML = mPaisOpts();
+      sel.disabled = (!window._proveedores || window._proveedores.length === 0);
+      if (currentVal) sel.value = currentVal;
+    }
+  });
 }
 function mArtOpts() {
   return '<option value="">— Seleccionar artículo —</option>' +
