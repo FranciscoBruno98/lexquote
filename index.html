@@ -3101,7 +3101,7 @@ function hexToRgb(hex) {
 // ══════════════════════════════════════════
 
 window.mExportar = function() {
-  var validos = window._mSvcs.filter(function(s){ return s.paisId && s.tarifa; });
+  var validos = window._mSvcs.filter(function(s){ return s.paisId && s.tarifa && !s.linkedTo; });
   if (!validos.length) { toast('Completá al menos un servicio con país y tarifa','err'); return; }
 
   cargarConfigPDF();
