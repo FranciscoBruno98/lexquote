@@ -1666,7 +1666,7 @@ window.doLogin = async function() {
         };
       }
 
-      var cfgResp = await fetch('/.netlify/functions/config', {
+      var cfgResp = await fetch('/api/config', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({sessionTicket: ticket, playFabId: playFabId, fbKeys: fbKeys})
